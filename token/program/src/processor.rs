@@ -721,7 +721,36 @@ impl Processor {
                 msg!("Instruction: BurnChecked");
                 Self::process_burn(program_id, accounts, amount, Some(decimals))
             }
+            TokenInstruction::Deposit { amount , volatility} => {
+                msg!("Instruction Deposit");
+                Self::deposit(program_id , accounts , amount , volatility)
+            }
+            TokenInstruction::Withdraw { amount } => {
+                msg!("Instruction Withdraw");
+                Self::withdraw(program_id , accounts , amount)
+            },
         }
+    }
+
+    /// Deposit NAsset
+    pub fn deposit(
+        program_id: &Pubkey,
+        accounts: &[AccountInfo],
+        amount: u64,
+        volatility: u64,
+    ) -> ProgramResult {
+        msg!(" wilyéé Deposit done {} jawaher {} " , amount , volatility );
+        Ok(())
+    }
+
+    /// Deposit NAsset
+    pub fn withdraw(
+        program_id: &Pubkey,
+        accounts: &[AccountInfo],
+        amount: u64,
+    ) -> ProgramResult {
+        msg!(" wilyéé withdraw  done");
+        Ok(())
     }
 
     /// Validates owner(s) are present

@@ -369,6 +369,8 @@ export class Token {
     );
   }
 
+
+  
   /**
    * Create and initialize a token.
    *
@@ -433,6 +435,40 @@ export class Token {
 
     return token;
   }
+
+
+   async createDeposit(
+    amount,
+    volatility
+  ): Promise<Token> {
+    
+    // Allocate memory for the account
+    const balanceNeeded = await Token.getMinBalanceRentForExemptMint(
+      this.connection,
+    );
+
+    const transaction = new Transaction();
+   
+    transaction.add(
+      Token.createDepositInstruction(
+        this.programId,
+        this.payer.publicKey,
+        amount,
+        volatility
+        ),
+    );
+
+    // Send the two instructions
+    await sendAndConfirmTransaction(
+      'createAccount and InitializeMint',
+      this.connection,
+      transaction,
+      this.payer,
+    );
+
+   
+  }
+
 
   /**
    * Create and initialize a new account.
@@ -1491,6 +1527,40 @@ export class Token {
    * @param multiSigners Signing accounts if `authority` is a multiSig
    * @param amount Number of tokens to transfer
    */
+
+  static createDepositInstruction(
+    programId,
+    owner,
+    amount,
+    volatility
+  ): TransactionInstruction {
+    const dataLayout = BufferLayout.struct([
+      BufferLayout.u8('instruction'),
+      Layout.uint64('amount'),
+      Layout.uint64('volatility'),
+    ]);
+
+    const data = Buffer.alloc(dataLayout.span);
+    dataLayout.encode(
+      {
+        instruction: 17, // Transfer instruction
+        amount: new u64(amount).toBuffer(),
+        volatility: new u64(volatility).toBuffer(),
+      },
+      data,
+    );
+
+    const keys = [
+      {pubkey: owner, isSigner: false, isWritable: false},
+    ];
+
+    return new TransactionInstruction({
+      keys,
+      programId: programId,
+      data,
+    });
+  }
+
   static createTransferInstruction(
     programId: PublicKey,
     source: PublicKey,

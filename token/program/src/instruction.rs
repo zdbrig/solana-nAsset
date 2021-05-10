@@ -363,6 +363,22 @@ pub enum TokenInstruction {
         /// The new account's owner/multisignature.
         owner: Pubkey,
     },
+
+    /// 17
+    /// Deposit a an amount to hedge token
+    Deposit {
+        /// amount to deposit
+       amount: u64,
+       /// volatility
+       volatility: u64 
+    },
+
+    // 18
+    /// withdraw funds after conversion
+    Withdraw {
+        /// amount to withdraw
+        amount: u64,
+    }
 }
 impl TokenInstruction {
     /// Unpacks a byte buffer into a [TokenInstruction](enum.TokenInstruction.html).
@@ -386,7 +402,7 @@ impl TokenInstruction {
                 let &m = rest.get(0).ok_or(InvalidInstruction)?;
                 Self::InitializeMultisig { m }
             }
-            3 | 4 | 7 | 8 => {
+            3 | 4 | 7 | 8 | 18 => {
                 let amount = rest
                     .get(..8)
                     .and_then(|slice| slice.try_into().ok())
@@ -397,8 +413,24 @@ impl TokenInstruction {
                     4 => Self::Approve { amount },
                     7 => Self::MintTo { amount },
                     8 => Self::Burn { amount },
+                    18 => Self::Withdraw {amount},
                     _ => unreachable!(),
                 }
+            }
+            17 => {
+                let (amount, rest) = rest.split_at(8);
+                
+                let amount = amount
+                    .try_into()
+                    .ok()
+                    .map(u64::from_le_bytes)
+                    .ok_or(InvalidInstruction)?;
+                let volatility = rest.try_into()
+                .ok()
+                .map(u64::from_le_bytes)
+                .ok_or(InvalidInstruction)?;
+
+                Self::Deposit { amount, volatility }
             }
             5 => Self::Revoke,
             6 => {
@@ -540,6 +572,18 @@ impl TokenInstruction {
                 buf.push(16);
                 buf.extend_from_slice(owner.as_ref());
             }
+            &Self::Deposit {amount , volatility} => {
+                buf.push(17);
+                buf.extend_from_slice(&amount.to_le_bytes());
+                buf.extend_from_slice(&volatility.to_le_bytes());
+            },
+            
+            &Self::Withdraw {amount } => {
+                buf.push(18);
+                buf.extend_from_slice(&amount.to_le_bytes());
+            },
+            
+
         };
         buf
     }

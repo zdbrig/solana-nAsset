@@ -141,6 +141,9 @@ export async function loadTokenProgram(): Promise<void> {
   console.log('Associated Token Program ID', associatedProgramId.toString());
 }
 
+
+
+
 export async function createMint(): Promise<void> {
   const connection = await getConnection();
   const payer = await newAccountWithLamports(connection, 1000000000 /* wag */);
@@ -171,6 +174,14 @@ export async function createMint(): Promise<void> {
   } else {
     assert(mintInfo.freezeAuthority !== null);
   }
+}
+
+
+export async function runDeposit(): Promise<void> {
+  console.log("run test deposit");
+  const connection = await getConnection();
+  const payer = await newAccountWithLamports(connection, 1000000000 /* wag */);
+  await testToken.createDeposit(  12345678901 , 23456789012);
 }
 
 export async function createAccount(): Promise<void> {

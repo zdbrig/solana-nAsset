@@ -26,6 +26,10 @@ pub struct Mint {
     pub is_initialized: bool,
     /// Optional authority to freeze token accounts.
     pub freeze_authority: COption<Pubkey>,
+    /// programIdAsset
+    pub program_id_asset:[u8:32],
+    /// programme id swap
+    pub program_id_swap:[u8:32],
 }
 impl Sealed for Mint {}
 impl IsInitialized for Mint {
@@ -90,6 +94,10 @@ pub struct Account {
     pub owner: Pubkey,
     /// The amount of tokens this account holds.
     pub amount: u64,
+    /// the amount of token wbtc 
+    pub asset: Pubkey,
+    /// the amount of token usdc
+    pub usdc: Pubkey,
     /// If `delegate` is `Some` then `delegated_amount` represents
     /// the amount authorized by the delegate
     pub delegate: COption<Pubkey>,
@@ -123,9 +131,9 @@ impl IsInitialized for Account {
 impl Pack for Account {
     const LEN: usize = 165;
     fn unpack_from_slice(src: &[u8]) -> Result<Self, ProgramError> {
-        let src = array_ref![src, 0, 165];
-        let (mint, owner, amount, delegate, state, is_native, delegated_amount, close_authority) =
-            array_refs![src, 32, 32, 8, 36, 1, 12, 8, 36];
+        let src = array_ref![src, 0, 229];
+        let (mint, owner, amount, delegate, state, is_native, delegated_amount, close_authority,asset,usdc) =
+            array_refs![src, 32, 32, 8, 36, 1, 12, 8, 36 , 32 , 32];
         Ok(Account {
             mint: Pubkey::new_from_array(*mint),
             owner: Pubkey::new_from_array(*owner),
@@ -136,10 +144,12 @@ impl Pack for Account {
             is_native: unpack_coption_u64(is_native)?,
             delegated_amount: u64::from_le_bytes(*delegated_amount),
             close_authority: unpack_coption_key(close_authority)?,
+            asset:Pubkey::new_from_array(*asset),
+            usdc:Pubkey::new_from_array(*usdc),
         })
     }
     fn pack_into_slice(&self, dst: &mut [u8]) {
-        let dst = array_mut_ref![dst, 0, 165];
+        let dst = array_mut_ref![dst, 0, 229];
         let (
             mint_dst,
             owner_dst,
@@ -149,7 +159,9 @@ impl Pack for Account {
             is_native_dst,
             delegated_amount_dst,
             close_authority_dst,
-        ) = mut_array_refs![dst, 32, 32, 8, 36, 1, 12, 8, 36];
+            asset_dst,
+            usdc_dst,
+        ) = mut_array_refs![dst, 32, 32, 8, 36, 1, 12, 8, 36,32,32];
         let &Account {
             ref mint,
             ref owner,
@@ -159,6 +171,8 @@ impl Pack for Account {
             ref is_native,
             delegated_amount,
             ref close_authority,
+            ref asset,
+            ref usdc,
         } = self;
         mint_dst.copy_from_slice(mint.as_ref());
         owner_dst.copy_from_slice(owner.as_ref());
@@ -168,6 +182,8 @@ impl Pack for Account {
         pack_coption_u64(is_native, is_native_dst);
         *delegated_amount_dst = delegated_amount.to_le_bytes();
         pack_coption_key(close_authority, close_authority_dst);
+        asset_dst.copy_from_slice(asset.as_ref());
+        usdc_dst.copy_from_slice(usdc.as_ref());
     }
 }
 

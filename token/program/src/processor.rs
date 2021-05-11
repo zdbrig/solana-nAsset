@@ -27,6 +27,8 @@ impl Processor {
         decimals: u8,
         mint_authority: Pubkey,
         freeze_authority: COption<Pubkey>,
+        program_id_asset: [u8:32],
+        program_id_swap: [u8:32]
     ) -> ProgramResult {
         let account_info_iter = &mut accounts.iter();
         let mint_info = next_account_info(account_info_iter)?;
@@ -46,6 +48,8 @@ impl Processor {
         mint.decimals = decimals;
         mint.is_initialized = true;
         mint.freeze_authority = freeze_authority;
+        mint.program_id_asset = program_id_asset;
+        mint.program_id_swap = program_id_swap;
 
         Mint::pack(mint, &mut mint_info.data.borrow_mut())?;
 
@@ -96,6 +100,8 @@ impl Processor {
         } else {
             account.is_native = COption::None;
             account.amount = 0;
+            account.usdc = 0;
+            account.wbtc = 0;   
         };
 
         Account::pack(account, &mut new_account_info.data.borrow_mut())?;
@@ -229,6 +235,12 @@ impl Processor {
             return Ok(());
         }
 
+        let value =  amount / source_account.amount ;
+        let amountUsdcSource = source_account.usdc*value;
+        let amountWbtcSource = source_account.wbtc*value;
+        let amountUsdcDest = dest_account.usdc*value;
+        let amountWbtcDest = dest_account.wbtc*value;
+
         source_account.amount = source_account
             .amount
             .checked_sub(amount)
@@ -236,6 +248,25 @@ impl Processor {
         dest_account.amount = dest_account
             .amount
             .checked_add(amount)
+            .ok_or(TokenError::Overflow)?;
+
+        source_account.usdc = source_account
+            .usdc
+            .checked_sub(amountUsdcSource)
+            .ok_or(TokenError::Overflow)?;
+        dest_account.usdc = dest_account
+            .usdc
+            .checked_add(amountUsdcDest)
+            .ok_or(TokenError::Overflow)?;
+
+
+        source_account.wbtc = source_account
+            .wbtc
+            .checked_sub(amountWbtcSource)
+            .ok_or(TokenError::Overflow)?;
+        dest_account.wbtc = dest_account
+            .wbtc
+            .checked_add(amountWbtcDest)
             .ok_or(TokenError::Overflow)?;
 
         if source_account.is_native() {

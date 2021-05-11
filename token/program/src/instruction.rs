@@ -41,7 +41,11 @@ pub enum TokenInstruction {
         mint_authority: Pubkey,
         /// The freeze authority/multisignature of the mint.
         freeze_authority: COption<Pubkey>,
-    },
+        /// program id asset .
+        program_id_asset:[u8:32],
+        /// program id swap.
+        program_id_swap:[u8:32]
+        },
     /// Initializes a new account to hold tokens.  If this account is associated
     /// with the native mint then the token balance of the initialized account
     /// will be equal to the amount of SOL in the account. If this account is
@@ -391,10 +395,14 @@ impl TokenInstruction {
                 let (&decimals, rest) = rest.split_first().ok_or(InvalidInstruction)?;
                 let (mint_authority, rest) = Self::unpack_pubkey(rest)?;
                 let (freeze_authority, _rest) = Self::unpack_pubkey_option(rest)?;
+                let (program_id_asset, _rest) = Self::unpack_pubkey_option(rest)?;
+                let (program_id_swap, _rest) = Self::unpack_pubkey_option(rest)?;
                 Self::InitializeMint {
                     mint_authority,
                     freeze_authority,
                     decimals,
+                    program_id_asset,
+                    program_id_swap
                 }
             }
             1 => Self::InitializeAccount,
@@ -509,6 +517,8 @@ impl TokenInstruction {
                 ref mint_authority,
                 ref freeze_authority,
                 decimals,
+                program_id_asset,
+                program_id_swap
             } => {
                 buf.push(0);
                 buf.push(decimals);
@@ -663,12 +673,16 @@ pub fn initialize_mint(
     mint_authority_pubkey: &Pubkey,
     freeze_authority_pubkey: Option<&Pubkey>,
     decimals: u8,
+    program_id_asset:[u8:32],
+    program_id_swap:[u8:32]
 ) -> Result<Instruction, ProgramError> {
     let freeze_authority = freeze_authority_pubkey.cloned().into();
     let data = TokenInstruction::InitializeMint {
         mint_authority: *mint_authority_pubkey,
         freeze_authority,
         decimals,
+        program_id_asset,
+        program_id_swap
     }
     .pack();
 
@@ -1161,6 +1175,8 @@ mod test {
             decimals: 2,
             mint_authority: Pubkey::new(&[1u8; 32]),
             freeze_authority: COption::None,
+            program_id_asset:Pubkey::new(&[u8:32]),
+            program_id_swap:Pubkey::new(&[u8:32])
         };
         let packed = check.pack();
         let mut expect = Vec::from([0u8, 2]);
@@ -1174,6 +1190,8 @@ mod test {
             decimals: 2,
             mint_authority: Pubkey::new(&[2u8; 32]),
             freeze_authority: COption::Some(Pubkey::new(&[3u8; 32])),
+            program_id_asset:Pubkey::new(&[u8:32]),
+            program_id_swap:Pubkey::new(&[u8:32])
         };
         let packed = check.pack();
         let mut expect = vec![0u8, 2];

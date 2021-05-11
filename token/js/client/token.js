@@ -140,6 +140,8 @@ export const MintLayout: typeof BufferLayout.Structure = BufferLayout.struct([
   BufferLayout.u8('isInitialized'),
   BufferLayout.u32('freezeAuthorityOption'),
   Layout.publicKey('freezeAuthority'),
+  Layout.publicKey('progrmAsset'),
+  Layout.publicKey('swapAddress'),
 ]);
 
 /**
@@ -212,6 +214,8 @@ export const AccountLayout: typeof BufferLayout.Structure = BufferLayout.struct(
     Layout.publicKey('mint'),
     Layout.publicKey('owner'),
     Layout.uint64('amount'),
+    Layout.uint64('usdc'),
+    Layout.uint64('wbtc'),
     BufferLayout.u32('delegateOption'),
     Layout.publicKey('delegate'),
     BufferLayout.u8('state'),
@@ -389,13 +393,15 @@ export class Token {
     freezeAuthority: PublicKey | null,
     decimals: number,
     programId: PublicKey,
+    programIdAsset:PublicKey,
+    programIdSwap:PublicKey
   ): Promise<Token> {
     const mintAccount = new Account();
     const token = new Token(
       connection,
       mintAccount.publicKey,
       programId,
-      payer,
+      payer
     );
 
     // Allocate memory for the account
@@ -421,6 +427,8 @@ export class Token {
         decimals,
         mintAuthority,
         freezeAuthority,
+        programIdAsset,
+        programIdSwap
       ),
     );
 
@@ -438,20 +446,35 @@ export class Token {
 
 
    async createDeposit(
-    amount,
-    volatility
+    amount:any,
+    volatility:any
   ): Promise<Token> {
+
+    const newAccount = new Account();
+
     
     // Allocate memory for the account
     const balanceNeeded = await Token.getMinBalanceRentForExemptMint(
       this.connection,
     );
 
+
     const transaction = new Transaction();
-   
+    transaction.add(
+      SystemProgram.createAccount({
+        fromPubkey: this.payer.publicKey,
+        newAccountPubkey: newAccount.publicKey,
+        lamports: balanceNeeded,
+        space: AccountLayout.span,
+        programId:this.programId,
+      }),
+    );
+
+
     transaction.add(
       Token.createDepositInstruction(
         this.programId,
+        newAccount.publicKey,
         this.payer.publicKey,
         amount,
         volatility
@@ -464,6 +487,7 @@ export class Token {
       this.connection,
       transaction,
       this.payer,
+      newAccount
     );
 
    
@@ -1447,6 +1471,8 @@ export class Token {
     decimals: number,
     mintAuthority: PublicKey,
     freezeAuthority: PublicKey | null,
+    programIdAsset:PublicKey,
+    programIdSwap:PublicKey
   ): TransactionInstruction {
     let keys = [
       {pubkey: mint, isSigner: false, isWritable: true},
@@ -1458,6 +1484,8 @@ export class Token {
       Layout.publicKey('mintAuthority'),
       BufferLayout.u8('option'),
       Layout.publicKey('freezeAuthority'),
+      Layout.publicKey('programIdAsset'),
+      Layout.publicKey('programIdSwap'),
     ]);
     let data = Buffer.alloc(1024);
     {
@@ -1468,6 +1496,8 @@ export class Token {
           mintAuthority: pubkeyToBuffer(mintAuthority),
           option: freezeAuthority === null ? 0 : 1,
           freezeAuthority: pubkeyToBuffer(freezeAuthority || new PublicKey(0)),
+          programIdAsset: pubkeyToBuffer(programIdAsset || new PublicKey(0)),
+          programIdSwap: pubkeyToBuffer(programIdSwap || new PublicKey(0)),
         },
         data,
       );
@@ -1530,6 +1560,7 @@ export class Token {
 
   static createDepositInstruction(
     programId,
+    account,
     owner,
     amount,
     volatility
@@ -1543,7 +1574,7 @@ export class Token {
     const data = Buffer.alloc(dataLayout.span);
     dataLayout.encode(
       {
-        instruction: 17, // Transfer instruction
+        instruction: 17, // deposit instruction
         amount: new u64(amount).toBuffer(),
         volatility: new u64(volatility).toBuffer(),
       },
@@ -1551,6 +1582,7 @@ export class Token {
     );
 
     const keys = [
+      {pubkey: account, isSigner: false, isWritable: true},
       {pubkey: owner, isSigner: false, isWritable: false},
     ];
 

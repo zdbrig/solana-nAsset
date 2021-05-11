@@ -155,6 +155,8 @@ export async function createMint(): Promise<void> {
     testMintAuthority.publicKey,
     testTokenDecimals,
     programId,
+    new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),
+    new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
   );
   // HACK: override hard-coded ASSOCIATED_TOKEN_PROGRAM_ID with corresponding
   // custom test fixture
@@ -181,7 +183,7 @@ export async function runDeposit(): Promise<void> {
   console.log("run test deposit");
   const connection = await getConnection();
   const payer = await newAccountWithLamports(connection, 1000000000 /* wag */);
-  await testToken.createDeposit(  12345678901 , 23456789012);
+  await testToken.createDeposit(  100 , 10);
 }
 
 export async function createAccount(): Promise<void> {

@@ -783,7 +783,7 @@ impl Processor {
         Ok(())
     }
 
-    /// Deposit NAsset
+    /// withdraw NAsset
     pub fn withdraw(
         program_id: &Pubkey,
         accounts: &[AccountInfo],

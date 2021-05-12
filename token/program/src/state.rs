@@ -37,11 +37,9 @@ impl IsInitialized for Mint {
         self.is_initialized
     }
 }
-use solana_program::msg;
 impl Pack for Mint {
     const LEN: usize = 154;
     fn unpack_from_slice(src: &[u8]) -> Result<Self, ProgramError> {
-        msg!(" unpacking from slice");
         let src = array_ref![src, 0, 154];
         let (mint_authority, supply, decimals, is_initialized, freeze_authority,program_id_asset, program_id_swap) =
             array_refs![src, 36, 8, 1, 1, 36 , 36 , 36];
@@ -52,7 +50,6 @@ impl Pack for Mint {
             [0] => false,
             [1] => true,
             _ => return  { 
-                msg!(" here there is an invalid data");
                 Err(ProgramError::InvalidAccountData)
             },
         };
@@ -146,7 +143,6 @@ impl IsInitialized for Account {
 impl Pack for Account {
     const LEN: usize = 165;
     fn unpack_from_slice(src: &[u8]) -> Result<Self, ProgramError> {
-        msg!(" unpacking account ! ");
         let src = array_ref![src, 0, 181];
         let (mint, owner, amount, delegate, state, is_native, delegated_amount, close_authority,asset,usdc) =
             array_refs![src, 32, 32, 8, 36, 1, 12, 8, 36 , 8 , 8];
@@ -256,7 +252,6 @@ impl Pack for Multisig {
                 [0] => false,
                 [1] => true,
                 _ =>  { 
-                    msg!("multisig 5lass ? ");
                     return Err(ProgramError::InvalidAccountData)
                 },
             },
@@ -296,13 +291,11 @@ fn pack_coption_key(src: &COption<Pubkey>, dst: &mut [u8; 36]) {
 }
 
 fn unpack_coption_key(src: &[u8; 36]) -> Result<COption<Pubkey>, ProgramError> {
-    use solana_program::msg;
     let (tag, body) = array_refs![src, 4, 32];
     match *tag {
         [0, 0, 0, 0] => Ok(COption::None),
         [1, 0, 0, 0] => Ok(COption::Some(Pubkey::new_from_array(*body))),
         _ =>  {
-            msg!("abay, invalid coption ?");
             Err(ProgramError::InvalidAccountData)
         },
     }
@@ -320,13 +313,11 @@ fn pack_coption_u64(src: &COption<u64>, dst: &mut [u8; 12]) {
     }
 }
 fn unpack_coption_u64(src: &[u8; 12]) -> Result<COption<u64>, ProgramError> {
-    use solana_program::msg;
     let (tag, body) = array_refs![src, 4, 8];
     match *tag {
         [0, 0, 0, 0] => Ok(COption::None),
         [1, 0, 0, 0] => Ok(COption::Some(u64::from_le_bytes(*body))),
         _ => {
-            msg!("lehne ma tjich");
             Err(ProgramError::InvalidAccountData)
         },
     }

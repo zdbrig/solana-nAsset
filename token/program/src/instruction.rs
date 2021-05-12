@@ -10,7 +10,6 @@ use solana_program::{
 };
 use std::convert::TryInto;
 use std::mem::size_of;
-use crate::solana_program::msg;
 
 /// Minimum number of multisignature signers (min N)
 pub const MIN_SIGNERS: usize = 1;
@@ -393,17 +392,11 @@ impl TokenInstruction {
         let (&tag, rest) = input.split_first().ok_or(InvalidInstruction)?;
         Ok(match tag {
             0 => {
-                msg!("unpacking create mint {} " , input.len());
                 let (&decimals, rest) = rest.split_first().ok_or(InvalidInstruction)?;
-                msg!("a");
                 let (mint_authority, rest) = Self::unpack_pubkey(rest)?;
-                msg!("b");
                 let (freeze_authority, _rest) = Self::unpack_pubkey_option(rest)?;
-                msg!("c");
                 let (program_id_asset, _rest2) = Self::unpack_pubkey_option(_rest)?;
-                msg!("d");
                 let (program_id_swap, _rest3) = Self::unpack_pubkey_option(_rest2)?;
-                msg!("e");
                 Self::InitializeMint {
                     mint_authority,
                     freeze_authority,
@@ -616,17 +609,14 @@ impl TokenInstruction {
     }
 
     fn unpack_pubkey_option(input: &[u8]) -> Result<(COption<Pubkey>, &[u8]), ProgramError> {
-        msg!("finding optional public key");
         match input.split_first() {
             Option::Some((&0, rest)) => Ok((COption::None, rest)),
             Option::Some((&1, rest)) if rest.len() >= 32 => {
                 let (key, rest) = rest.split_at(32);
                 let pk = Pubkey::new(key);
-                msg!("found public key");
                 Ok((COption::Some(pk), rest))
             }
             _ => {
-                msg!("we can not split here");
                 Err(TokenError::InvalidInstruction.into()) 
             },
         }

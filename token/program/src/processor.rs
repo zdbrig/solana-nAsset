@@ -30,29 +30,22 @@ impl Processor {
         program_id_asset: COption<Pubkey>,
         program_id_swap: COption<Pubkey>
     ) -> ProgramResult {
-        msg!("top");
         let account_info_iter = &mut accounts.iter();
         let mint_info = next_account_info(account_info_iter)?;
         let mint_data_len = mint_info.data_len();
         let rent = &Rent::from_account_info(next_account_info(account_info_iter)?)?;
-        msg!("starting process {} " , mint_data_len);
         let mut mint = 
         match (Mint::unpack_unchecked(&mint_info.data.borrow())) {
             Ok(a) => a ,
             Err(a) => {
-                msg!("error calling unpack unchecked {}" , a);
                 panic!("exit")
             }
         };
-        msg!("pacman ");
         if mint.is_initialized {
-            msg!("its initialized maaaaan !");
             return Err(TokenError::AlreadyInUse.into());
         }
-        msg!("rent.is_exemp");
 
         if !rent.is_exempt(mint_info.lamports(), mint_data_len) {
-            msg!("you need to pay ! you need to pay ! ");
             return Err(TokenError::NotRentExempt.into());
         }
 

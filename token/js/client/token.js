@@ -140,8 +140,10 @@ export const MintLayout: typeof BufferLayout.Structure = BufferLayout.struct([
   BufferLayout.u8('isInitialized'),
   BufferLayout.u32('freezeAuthorityOption'),
   Layout.publicKey('freezeAuthority'),
-  Layout.publicKey('progrmAsset'),
-  Layout.publicKey('swapAddress'),
+  BufferLayout.u32('programIdAssetOption'),
+  Layout.publicKey('programIdAsset'),
+  BufferLayout.u32('programIdSwapOption'),
+  Layout.publicKey('programIdSwap'),
 ]);
 
 /**
@@ -215,7 +217,7 @@ export const AccountLayout: typeof BufferLayout.Structure = BufferLayout.struct(
     Layout.publicKey('owner'),
     Layout.uint64('amount'),
     Layout.uint64('usdc'),
-    Layout.uint64('wbtc'),
+    Layout.uint64('asset'),
     BufferLayout.u32('delegateOption'),
     Layout.publicKey('delegate'),
     BufferLayout.u8('state'),
@@ -410,6 +412,7 @@ export class Token {
     );
 
     const transaction = new Transaction();
+    console.log("space is " + MintLayout.span);
     transaction.add(
       SystemProgram.createAccount({
         fromPubkey: payer.publicKey,
@@ -1471,8 +1474,8 @@ export class Token {
     decimals: number,
     mintAuthority: PublicKey,
     freezeAuthority: PublicKey | null,
-    programIdAsset:PublicKey,
-    programIdSwap:PublicKey
+    programIdAsset:PublicKey | null,
+    programIdSwap:PublicKey | null
   ): TransactionInstruction {
     let keys = [
       {pubkey: mint, isSigner: false, isWritable: true},
@@ -1484,10 +1487,12 @@ export class Token {
       Layout.publicKey('mintAuthority'),
       BufferLayout.u8('option'),
       Layout.publicKey('freezeAuthority'),
+      BufferLayout.u8('option1'),
       Layout.publicKey('programIdAsset'),
+      BufferLayout.u8('option2'),
       Layout.publicKey('programIdSwap'),
     ]);
-    let data = Buffer.alloc(1024);
+    let data = Buffer.alloc(2048);
     {
       const encodeLength = commandDataLayout.encode(
         {
@@ -1496,13 +1501,18 @@ export class Token {
           mintAuthority: pubkeyToBuffer(mintAuthority),
           option: freezeAuthority === null ? 0 : 1,
           freezeAuthority: pubkeyToBuffer(freezeAuthority || new PublicKey(0)),
+          option1: programIdAsset === null ? 0 : 1,
           programIdAsset: pubkeyToBuffer(programIdAsset || new PublicKey(0)),
+          option2: programIdSwap === null ? 0 : 1,
           programIdSwap: pubkeyToBuffer(programIdSwap || new PublicKey(0)),
         },
         data,
       );
-      data = data.slice(0, encodeLength);
+      data = data.slice(0, 154);
+      console.log("###### sending data : " + encodeLength)
     }
+
+    
 
     return new TransactionInstruction({
       keys,

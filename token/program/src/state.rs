@@ -27,9 +27,9 @@ pub struct Mint {
     /// Optional authority to freeze token accounts.
     pub freeze_authority: COption<Pubkey>,
     /// programIdAsset
-    pub program_id_asset:[u8:32],
+    pub program_id_asset:COption<Pubkey>,
     /// programme id swap
-    pub program_id_swap:[u8:32],
+    pub program_id_swap:COption<Pubkey>,
 }
 impl Sealed for Mint {}
 impl IsInitialized for Mint {
@@ -37,50 +37,65 @@ impl IsInitialized for Mint {
         self.is_initialized
     }
 }
+use solana_program::msg;
 impl Pack for Mint {
-    const LEN: usize = 82;
+    const LEN: usize = 154;
     fn unpack_from_slice(src: &[u8]) -> Result<Self, ProgramError> {
-        let src = array_ref![src, 0, 82];
-        let (mint_authority, supply, decimals, is_initialized, freeze_authority) =
-            array_refs![src, 36, 8, 1, 1, 36];
+        msg!(" unpacking from slice");
+        let src = array_ref![src, 0, 154];
+        let (mint_authority, supply, decimals, is_initialized, freeze_authority,program_id_asset, program_id_swap) =
+            array_refs![src, 36, 8, 1, 1, 36 , 36 , 36];
         let mint_authority = unpack_coption_key(mint_authority)?;
         let supply = u64::from_le_bytes(*supply);
         let decimals = decimals[0];
         let is_initialized = match is_initialized {
             [0] => false,
             [1] => true,
-            _ => return Err(ProgramError::InvalidAccountData),
+            _ => return  { 
+                msg!(" here there is an invalid data");
+                Err(ProgramError::InvalidAccountData)
+            },
         };
         let freeze_authority = unpack_coption_key(freeze_authority)?;
+        let program_id_asset = unpack_coption_key(program_id_asset)?;
+        let program_id_swap = unpack_coption_key(program_id_swap)?;
         Ok(Mint {
             mint_authority,
             supply,
             decimals,
             is_initialized,
             freeze_authority,
+            program_id_asset,
+            program_id_swap,
         })
     }
     fn pack_into_slice(&self, dst: &mut [u8]) {
-        let dst = array_mut_ref![dst, 0, 82];
+        let dst = array_mut_ref![dst, 0, 154];
         let (
             mint_authority_dst,
             supply_dst,
             decimals_dst,
             is_initialized_dst,
             freeze_authority_dst,
-        ) = mut_array_refs![dst, 36, 8, 1, 1, 36];
+            program_id_asset_dst,
+            program_id_swap_dst,
+        ) = mut_array_refs![dst, 36, 8, 1, 1, 36,36,36];
         let &Mint {
             ref mint_authority,
             supply,
             decimals,
             is_initialized,
             ref freeze_authority,
+            ref program_id_asset,
+            ref program_id_swap,
         } = self;
         pack_coption_key(mint_authority, mint_authority_dst);
         *supply_dst = supply.to_le_bytes();
         decimals_dst[0] = decimals;
         is_initialized_dst[0] = is_initialized as u8;
         pack_coption_key(freeze_authority, freeze_authority_dst);
+        pack_coption_key(program_id_asset, program_id_asset_dst);
+        pack_coption_key(program_id_swap, program_id_swap_dst);
     }
 }
 
@@ -94,10 +109,10 @@ pub struct Account {
     pub owner: Pubkey,
     /// The amount of tokens this account holds.
     pub amount: u64,
-    /// the amount of token wbtc 
-    pub asset: Pubkey,
+    /// the amount of token asset 
+    pub asset: u64,
     /// the amount of token usdc
-    pub usdc: Pubkey,
+    pub usdc: u64,
     /// If `delegate` is `Some` then `delegated_amount` represents
     /// the amount authorized by the delegate
     pub delegate: COption<Pubkey>,
@@ -131,9 +146,10 @@ impl IsInitialized for Account {
 impl Pack for Account {
     const LEN: usize = 165;
     fn unpack_from_slice(src: &[u8]) -> Result<Self, ProgramError> {
-        let src = array_ref![src, 0, 229];
+        msg!(" unpacking account ! ");
+        let src = array_ref![src, 0, 181];
         let (mint, owner, amount, delegate, state, is_native, delegated_amount, close_authority,asset,usdc) =
-            array_refs![src, 32, 32, 8, 36, 1, 12, 8, 36 , 32 , 32];
+            array_refs![src, 32, 32, 8, 36, 1, 12, 8, 36 , 8 , 8];
         Ok(Account {
             mint: Pubkey::new_from_array(*mint),
             owner: Pubkey::new_from_array(*owner),
@@ -144,12 +160,12 @@ impl Pack for Account {
             is_native: unpack_coption_u64(is_native)?,
             delegated_amount: u64::from_le_bytes(*delegated_amount),
             close_authority: unpack_coption_key(close_authority)?,
-            asset:Pubkey::new_from_array(*asset),
-            usdc:Pubkey::new_from_array(*usdc),
+            asset: u64::from_le_bytes(*asset),
+            usdc: u64::from_le_bytes(*usdc),
         })
     }
     fn pack_into_slice(&self, dst: &mut [u8]) {
-        let dst = array_mut_ref![dst, 0, 229];
+        let dst = array_mut_ref![dst, 0, 181];
         let (
             mint_dst,
             owner_dst,
@@ -161,7 +177,7 @@ impl Pack for Account {
             close_authority_dst,
             asset_dst,
             usdc_dst,
-        ) = mut_array_refs![dst, 32, 32, 8, 36, 1, 12, 8, 36,32,32];
+        ) = mut_array_refs![dst, 32, 32, 8, 36, 1, 12, 8, 36,8,8];
         let &Account {
             ref mint,
             ref owner,
@@ -182,8 +198,9 @@ impl Pack for Account {
         pack_coption_u64(is_native, is_native_dst);
         *delegated_amount_dst = delegated_amount.to_le_bytes();
         pack_coption_key(close_authority, close_authority_dst);
-        asset_dst.copy_from_slice(asset.as_ref());
-        usdc_dst.copy_from_slice(usdc.as_ref());
+        *asset_dst = asset.to_le_bytes();
+        *usdc_dst = usdc.to_le_bytes();
+        
     }
 }
 
@@ -238,7 +255,10 @@ impl Pack for Multisig {
             is_initialized: match is_initialized {
                 [0] => false,
                 [1] => true,
-                _ => return Err(ProgramError::InvalidAccountData),
+                _ =>  { 
+                    msg!("multisig 5lass ? ");
+                    return Err(ProgramError::InvalidAccountData)
+                },
             },
             signers: [Pubkey::new_from_array([0u8; 32]); MAX_SIGNERS],
         };
@@ -274,12 +294,17 @@ fn pack_coption_key(src: &COption<Pubkey>, dst: &mut [u8; 36]) {
         }
     }
 }
+
 fn unpack_coption_key(src: &[u8; 36]) -> Result<COption<Pubkey>, ProgramError> {
+    use solana_program::msg;
     let (tag, body) = array_refs![src, 4, 32];
     match *tag {
         [0, 0, 0, 0] => Ok(COption::None),
         [1, 0, 0, 0] => Ok(COption::Some(Pubkey::new_from_array(*body))),
-        _ => Err(ProgramError::InvalidAccountData),
+        _ =>  {
+            msg!("abay, invalid coption ?");
+            Err(ProgramError::InvalidAccountData)
+        },
     }
 }
 fn pack_coption_u64(src: &COption<u64>, dst: &mut [u8; 12]) {
@@ -295,10 +320,14 @@ fn pack_coption_u64(src: &COption<u64>, dst: &mut [u8; 12]) {
     }
 }
 fn unpack_coption_u64(src: &[u8; 12]) -> Result<COption<u64>, ProgramError> {
+    use solana_program::msg;
     let (tag, body) = array_refs![src, 4, 8];
     match *tag {
         [0, 0, 0, 0] => Ok(COption::None),
         [1, 0, 0, 0] => Ok(COption::Some(u64::from_le_bytes(*body))),
-        _ => Err(ProgramError::InvalidAccountData),
+        _ => {
+            msg!("lehne ma tjich");
+            Err(ProgramError::InvalidAccountData)
+        },
     }
 }

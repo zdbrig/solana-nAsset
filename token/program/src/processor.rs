@@ -27,20 +27,32 @@ impl Processor {
         decimals: u8,
         mint_authority: Pubkey,
         freeze_authority: COption<Pubkey>,
-        program_id_asset: [u8:32],
-        program_id_swap: [u8:32]
+        program_id_asset: COption<Pubkey>,
+        program_id_swap: COption<Pubkey>
     ) -> ProgramResult {
+        msg!("top");
         let account_info_iter = &mut accounts.iter();
         let mint_info = next_account_info(account_info_iter)?;
         let mint_data_len = mint_info.data_len();
         let rent = &Rent::from_account_info(next_account_info(account_info_iter)?)?;
-
-        let mut mint = Mint::unpack_unchecked(&mint_info.data.borrow())?;
+        msg!("starting process {} " , mint_data_len);
+        let mut mint = 
+        match (Mint::unpack_unchecked(&mint_info.data.borrow())) {
+            Ok(a) => a ,
+            Err(a) => {
+                msg!("error calling unpack unchecked {}" , a);
+                panic!("exit")
+            }
+        };
+        msg!("pacman ");
         if mint.is_initialized {
+            msg!("its initialized maaaaan !");
             return Err(TokenError::AlreadyInUse.into());
         }
+        msg!("rent.is_exemp");
 
         if !rent.is_exempt(mint_info.lamports(), mint_data_len) {
+            msg!("you need to pay ! you need to pay ! ");
             return Err(TokenError::NotRentExempt.into());
         }
 
@@ -101,7 +113,7 @@ impl Processor {
             account.is_native = COption::None;
             account.amount = 0;
             account.usdc = 0;
-            account.wbtc = 0;   
+            account.asset = 0;   
         };
 
         Account::pack(account, &mut new_account_info.data.borrow_mut())?;
@@ -237,9 +249,9 @@ impl Processor {
 
         let value =  amount / source_account.amount ;
         let amountUsdcSource = source_account.usdc*value;
-        let amountWbtcSource = source_account.wbtc*value;
+        let amountassetSource = source_account.asset*value;
         let amountUsdcDest = dest_account.usdc*value;
-        let amountWbtcDest = dest_account.wbtc*value;
+        let amountassetDest = dest_account.asset*value;
 
         source_account.amount = source_account
             .amount
@@ -260,13 +272,13 @@ impl Processor {
             .ok_or(TokenError::Overflow)?;
 
 
-        source_account.wbtc = source_account
-            .wbtc
-            .checked_sub(amountWbtcSource)
+        source_account.asset = source_account
+            .asset
+            .checked_sub(amountassetSource)
             .ok_or(TokenError::Overflow)?;
-        dest_account.wbtc = dest_account
-            .wbtc
-            .checked_add(amountWbtcDest)
+        dest_account.asset = dest_account
+            .asset
+            .checked_add(amountassetDest)
             .ok_or(TokenError::Overflow)?;
 
         if source_account.is_native() {
@@ -681,9 +693,13 @@ impl Processor {
                 decimals,
                 mint_authority,
                 freeze_authority,
+                program_id_asset,
+                program_id_swap,
             } => {
                 msg!("Instruction: InitializeMint");
-                Self::process_initialize_mint(accounts, decimals, mint_authority, freeze_authority)
+                Self::process_initialize_mint(accounts, decimals, mint_authority, freeze_authority,
+                    program_id_asset, program_id_swap
+                )
             }
             TokenInstruction::InitializeAccount => {
                 msg!("Instruction: InitializeAccount");

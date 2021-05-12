@@ -122,10 +122,7 @@ async function GetPrograms(connection: Connection): Promise<void> {
       connection,
       '../../target/bpfel-unknown-unknown/release/spl_token.so',
     );
-    associatedProgramId = await loadProgram(
-      connection,
-      '../../target/bpfel-unknown-unknown/release/spl_associated_token_account.so',
-    );
+    associatedProgramId = programId;
     await store.save('config.json', {
       tokenProgramId: programId.toString(),
       associatedTokenProgramId: associatedProgramId.toString(),
@@ -155,8 +152,8 @@ export async function createMint(): Promise<void> {
     testMintAuthority.publicKey,
     testTokenDecimals,
     programId,
-    new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),
-    new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
+    testMintAuthority.publicKey,
+    testMintAuthority.publicKey
   );
   // HACK: override hard-coded ASSOCIATED_TOKEN_PROGRAM_ID with corresponding
   // custom test fixture

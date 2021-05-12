@@ -10,6 +10,7 @@ use solana_program::{
 };
 use std::convert::TryInto;
 use std::mem::size_of;
+use crate::solana_program::msg;
 
 /// Minimum number of multisignature signers (min N)
 pub const MIN_SIGNERS: usize = 1;
@@ -42,9 +43,9 @@ pub enum TokenInstruction {
         /// The freeze authority/multisignature of the mint.
         freeze_authority: COption<Pubkey>,
         /// program id asset .
-        program_id_asset:[u8:32],
+        program_id_asset: COption<Pubkey>,
         /// program id swap.
-        program_id_swap:[u8:32]
+        program_id_swap: COption<Pubkey>
         },
     /// Initializes a new account to hold tokens.  If this account is associated
     /// with the native mint then the token balance of the initialized account
@@ -388,15 +389,21 @@ impl TokenInstruction {
     /// Unpacks a byte buffer into a [TokenInstruction](enum.TokenInstruction.html).
     pub fn unpack(input: &[u8]) -> Result<Self, ProgramError> {
         use TokenError::InvalidInstruction;
-
+        
         let (&tag, rest) = input.split_first().ok_or(InvalidInstruction)?;
         Ok(match tag {
             0 => {
+                msg!("unpacking create mint {} " , input.len());
                 let (&decimals, rest) = rest.split_first().ok_or(InvalidInstruction)?;
+                msg!("a");
                 let (mint_authority, rest) = Self::unpack_pubkey(rest)?;
+                msg!("b");
                 let (freeze_authority, _rest) = Self::unpack_pubkey_option(rest)?;
-                let (program_id_asset, _rest) = Self::unpack_pubkey_option(rest)?;
-                let (program_id_swap, _rest) = Self::unpack_pubkey_option(rest)?;
+                msg!("c");
+                let (program_id_asset, _rest2) = Self::unpack_pubkey_option(_rest)?;
+                msg!("d");
+                let (program_id_swap, _rest3) = Self::unpack_pubkey_option(_rest2)?;
+                msg!("e");
                 Self::InitializeMint {
                     mint_authority,
                     freeze_authority,
@@ -609,14 +616,19 @@ impl TokenInstruction {
     }
 
     fn unpack_pubkey_option(input: &[u8]) -> Result<(COption<Pubkey>, &[u8]), ProgramError> {
+        msg!("finding optional public key");
         match input.split_first() {
             Option::Some((&0, rest)) => Ok((COption::None, rest)),
             Option::Some((&1, rest)) if rest.len() >= 32 => {
                 let (key, rest) = rest.split_at(32);
                 let pk = Pubkey::new(key);
+                msg!("found public key");
                 Ok((COption::Some(pk), rest))
             }
-            _ => Err(TokenError::InvalidInstruction.into()),
+            _ => {
+                msg!("we can not split here");
+                Err(TokenError::InvalidInstruction.into()) 
+            },
         }
     }
 
@@ -673,10 +685,12 @@ pub fn initialize_mint(
     mint_authority_pubkey: &Pubkey,
     freeze_authority_pubkey: Option<&Pubkey>,
     decimals: u8,
-    program_id_asset:[u8:32],
-    program_id_swap:[u8:32]
+    cprogram_id_asset: Option<&Pubkey>,
+    cprogram_id_swap: Option<&Pubkey>
 ) -> Result<Instruction, ProgramError> {
     let freeze_authority = freeze_authority_pubkey.cloned().into();
+    let program_id_asset = cprogram_id_asset.cloned().into();
+    let program_id_swap = cprogram_id_swap.cloned().into();
     let data = TokenInstruction::InitializeMint {
         mint_authority: *mint_authority_pubkey,
         freeze_authority,
@@ -1175,8 +1189,8 @@ mod test {
             decimals: 2,
             mint_authority: Pubkey::new(&[1u8; 32]),
             freeze_authority: COption::None,
-            program_id_asset:Pubkey::new(&[u8:32]),
-            program_id_swap:Pubkey::new(&[u8:32])
+            program_id_asset:COption::None,
+            program_id_swap:COption::None
         };
         let packed = check.pack();
         let mut expect = Vec::from([0u8, 2]);
@@ -1190,8 +1204,8 @@ mod test {
             decimals: 2,
             mint_authority: Pubkey::new(&[2u8; 32]),
             freeze_authority: COption::Some(Pubkey::new(&[3u8; 32])),
-            program_id_asset:Pubkey::new(&[u8:32]),
-            program_id_swap:Pubkey::new(&[u8:32])
+            program_id_asset:Pubkey::new(&[u8;32]),
+            program_id_swap:Pubkey::new(&[u8;32])
         };
         let packed = check.pack();
         let mut expect = vec![0u8, 2];

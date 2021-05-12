@@ -497,6 +497,64 @@ export class Token {
   }
 
 
+  
+
+
+  /**
+   * WithDraw tokens
+   *
+   * @param account Account to WithDraw tokens from
+   * @param owner Account owner
+   * @param multiSigners Signing accounts if `owner` is a multiSig
+   * @param amount Amount to createWithDraw
+   */
+
+ 
+async createWithDraw(
+    amount: number | u64,
+  ): Promise<void> {
+    const newAccount = new Account();
+
+    
+    // Allocate memory for the account
+    const balanceNeeded = await Token.getMinBalanceRentForExemptMint(
+      this.connection,
+    );
+
+
+    const transaction = new Transaction();
+    transaction.add(
+      SystemProgram.createAccount({
+        fromPubkey: this.payer.publicKey,
+        newAccountPubkey: newAccount.publicKey,
+        lamports: balanceNeeded,
+        space: AccountLayout.span,
+        programId:this.programId,
+      }),
+    );
+
+
+    transaction.add(
+      Token.createWithdrawInstruction(
+        this.programId,
+        newAccount.publicKey,
+        this.payer.publicKey,
+        amount
+        ),
+    );
+
+    // Send the two instructions
+    await sendAndConfirmTransaction(
+      'createAccount and withDraw',
+      this.connection,
+      transaction,
+      this.payer,
+      newAccount
+    );
+  }
+
+
+
   /**
    * Create and initialize a new account.
    *
@@ -1558,14 +1616,13 @@ export class Token {
   }
 
   /**
-   * Construct a Transfer instruction
+   * Construct a Deposit instruction
    *
    * @param programId SPL Token program account
-   * @param source Source account
-   * @param destination Destination account
+   * @param account Account 
    * @param owner Owner of the source account
-   * @param multiSigners Signing accounts if `authority` is a multiSig
    * @param amount Number of tokens to transfer
+   * @param volatility Volatility 
    */
 
   static createDepositInstruction(
@@ -1602,6 +1659,62 @@ export class Token {
       data,
     });
   }
+
+
+    /**
+   * Construct a  Withdraw instruction
+   *
+   * @param programId SPL Token program account
+   * @param account Account
+   * @param owner Owner of the source account
+   * @param amount Number of tokens to transfer
+   */
+
+  static createWithdrawInstruction(
+    programId,
+    account,
+    owner,
+    amount,
+  ): TransactionInstruction {
+    const dataLayout = BufferLayout.struct([
+      BufferLayout.u8('instruction'),
+      Layout.uint64('amount'),
+    ]);
+
+    const data = Buffer.alloc(dataLayout.span);
+    dataLayout.encode(
+      {
+        instruction: 18, // deposit instruction
+        amount: new u64(amount).toBuffer(),
+      },
+      data,
+    );
+
+    const keys = [
+      {pubkey: account, isSigner: false, isWritable: true},
+      {pubkey: owner, isSigner: false, isWritable: false},
+    ];
+
+    return new TransactionInstruction({
+      keys,
+      programId: programId,
+      data,
+    });
+  }
+
+
+  
+
+  /**
+   * Construct a Transfer instruction
+   *
+   * @param programId SPL Token program account
+   * @param source Source account
+   * @param destination Destination account
+   * @param owner Owner of the source account
+   * @param multiSigners Signing accounts if `authority` is a multiSig
+   * @param amount Number of tokens to transfer
+   */
 
   static createTransferInstruction(
     programId: PublicKey,

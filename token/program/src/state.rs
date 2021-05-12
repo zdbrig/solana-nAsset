@@ -37,7 +37,6 @@ impl IsInitialized for Mint {
         self.is_initialized
     }
 }
-use solana_program::msg;
 impl Pack for Mint {
     const LEN: usize = 154;
     fn unpack_from_slice(src: &[u8]) -> Result<Self, ProgramError> {
@@ -292,7 +291,6 @@ fn pack_coption_key(src: &COption<Pubkey>, dst: &mut [u8; 36]) {
 }
 
 fn unpack_coption_key(src: &[u8; 36]) -> Result<COption<Pubkey>, ProgramError> {
-    use solana_program::msg;
     let (tag, body) = array_refs![src, 4, 32];
     match *tag {
         [0, 0, 0, 0] => Ok(COption::None),
@@ -315,7 +313,6 @@ fn pack_coption_u64(src: &COption<u64>, dst: &mut [u8; 12]) {
     }
 }
 fn unpack_coption_u64(src: &[u8; 12]) -> Result<COption<u64>, ProgramError> {
-    use solana_program::msg;
     let (tag, body) = array_refs![src, 4, 8];
     match *tag {
         [0, 0, 0, 0] => Ok(COption::None),

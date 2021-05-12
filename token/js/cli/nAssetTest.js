@@ -24,6 +24,7 @@ import {
   closeAccount,
   nativeToken,
   runDeposit,
+  withDraw
 } from './token-test';
 
 async function main() {
@@ -35,8 +36,14 @@ async function main() {
   // await createAccount();
   // console.log("create association");
   // await createAssociatedAccount();
-  console.log(" Run Depsit");
+  console.log("Run test: Depsit");
   await runDeposit();
+
+  console.log('Run test: transfer');
+  await transfer();
+
+  console.log('Run test: withDraw');
+  await withDraw();
 }
 
 main()

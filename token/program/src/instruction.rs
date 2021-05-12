@@ -10,7 +10,6 @@ use solana_program::{
 };
 use std::convert::TryInto;
 use std::mem::size_of;
-use crate::solana_program::msg;
 
 /// Minimum number of multisignature signers (min N)
 pub const MIN_SIGNERS: usize = 1;

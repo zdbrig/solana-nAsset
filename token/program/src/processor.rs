@@ -779,17 +779,15 @@ impl Processor {
         amount: u64,
         volatility: u64,
     ) -> ProgramResult {
-        msg!(" wilyéé Deposit done {} jawaher {} " , amount , volatility );
         Ok(())
     }
 
-    /// Deposit NAsset
+    /// withdraw NAsset
     pub fn withdraw(
         program_id: &Pubkey,
         accounts: &[AccountInfo],
         amount: u64,
     ) -> ProgramResult {
-        msg!(" wilyéé withdraw  done");
         Ok(())
     }
 

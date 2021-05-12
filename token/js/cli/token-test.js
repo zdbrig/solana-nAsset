@@ -183,6 +183,15 @@ export async function runDeposit(): Promise<void> {
   await testToken.createDeposit(  100 , 10);
 }
 
+
+
+export async function withDraw(): Promise<void> {
+  console.log("run test withdraw");
+  const connection = await getConnection();
+  const payer = await newAccountWithLamports(connection, 1000000000 /* wag */);
+  await testToken.createWithDraw( 10);
+}
+
 export async function createAccount(): Promise<void> {
   testAccountOwner = new Account();
   testAccount = await testToken.createAccount(testAccountOwner.publicKey);

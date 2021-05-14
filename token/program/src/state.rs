@@ -140,8 +140,25 @@ impl IsInitialized for Account {
         self.state != AccountState::Uninitialized
     }
 }
+/*
+ Layout.publicKey('mint'), //  32
+    Layout.publicKey('owner'), //32
+    Layout.uint64('amount'), // 8
+    Layout.uint64('usdc'), // 8
+    Layout.uint64('asset'), // 8
+    BufferLayout.u32('delegateOption'), 
+    Layout.publicKey('delegate'),// 36
+    BufferLayout.u8('state'), // 1
+    BufferLayout.u32('isNativeOption'), 
+    Layout.uint64('isNative'), //12
+    Layout.uint64('delegatedAmount'),// 8
+    BufferLayout.u32('closeAuthorityOption'),
+    Layout.publicKey('closeAuthority'),//36
+
+
+*/
 impl Pack for Account {
-    const LEN: usize = 165;
+    const LEN: usize = 181;
     fn unpack_from_slice(src: &[u8]) -> Result<Self, ProgramError> {
         let src = array_ref![src, 0, 181];
         let (mint, owner, amount, delegate, state, is_native, delegated_amount, close_authority,asset,usdc) =
@@ -183,8 +200,8 @@ impl Pack for Account {
             ref is_native,
             delegated_amount,
             ref close_authority,
-            ref asset,
-            ref usdc,
+             asset,
+             usdc,
         } = self;
         mint_dst.copy_from_slice(mint.as_ref());
         owner_dst.copy_from_slice(owner.as_ref());

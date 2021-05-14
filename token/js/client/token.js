@@ -213,19 +213,19 @@ type AccountInfo = {|
  */
 export const AccountLayout: typeof BufferLayout.Structure = BufferLayout.struct(
   [
-    Layout.publicKey('mint'),
-    Layout.publicKey('owner'),
-    Layout.uint64('amount'),
-    Layout.uint64('usdc'),
-    Layout.uint64('asset'),
-    BufferLayout.u32('delegateOption'),
-    Layout.publicKey('delegate'),
-    BufferLayout.u8('state'),
-    BufferLayout.u32('isNativeOption'),
-    Layout.uint64('isNative'),
-    Layout.uint64('delegatedAmount'),
+    Layout.publicKey('mint'), //  32
+    Layout.publicKey('owner'), //32
+    Layout.uint64('amount'), // 8
+    BufferLayout.u32('delegateOption'), 
+    Layout.publicKey('delegate'),// 36
+    BufferLayout.u8('state'), // 1
+    BufferLayout.u32('isNativeOption'), 
+    Layout.uint64('isNative'), //12
+    Layout.uint64('delegatedAmount'),// 8
     BufferLayout.u32('closeAuthorityOption'),
-    Layout.publicKey('closeAuthority'),
+    Layout.publicKey('closeAuthority'),//36
+    Layout.uint64('usdc'), // 8
+    Layout.uint64('asset'), // 8
   ],
 );
 
@@ -422,17 +422,21 @@ export class Token {
         programId,
       }),
     );
-
+      console.log("programId = " + programId);
+    let programKey = await PublicKey.createProgramAddress(["You pass butter" , "a"],programId);
+  
+    let instruction =  Token.createInitMintInstruction(
+      programId,
+      mintAccount.publicKey,
+      decimals,
+      mintAuthority,
+      freezeAuthority,
+      programIdAsset,
+      programIdSwap,
+      programKey
+    );
     transaction.add(
-      Token.createInitMintInstruction(
-        programId,
-        mintAccount.publicKey,
-        decimals,
-        mintAuthority,
-        freezeAuthority,
-        programIdAsset,
-        programIdSwap
-      ),
+      instruction
     );
 
     // Send the two instructions
@@ -900,7 +904,8 @@ async createWithDraw(
     accountInfo.mint = new PublicKey(accountInfo.mint);
     accountInfo.owner = new PublicKey(accountInfo.owner);
     accountInfo.amount = u64.fromBuffer(accountInfo.amount);
-
+    accountInfo.usdc = u64.fromBuffer(accountInfo.usdc);
+    accountInfo.asset = u64.fromBuffer(accountInfo.asset);
     if (accountInfo.delegateOption === 0) {
       accountInfo.delegate = null;
       accountInfo.delegatedAmount = new u64();
@@ -1526,18 +1531,26 @@ async createWithDraw(
    * @param mintAuthority Minting authority
    * @param freezeAuthority Optional authority that can freeze token accounts
    */
-  static createInitMintInstruction(
+   static  createInitMintInstruction(
     programId: PublicKey,
     mint: PublicKey,
     decimals: number,
     mintAuthority: PublicKey,
     freezeAuthority: PublicKey | null,
     programIdAsset:PublicKey | null,
-    programIdSwap:PublicKey | null
+    programIdSwap:PublicKey | null,
+    programKey: PublicKey
   ): TransactionInstruction {
+    
+    
     let keys = [
       {pubkey: mint, isSigner: false, isWritable: true},
       {pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false},
+      {pubkey: programIdAsset, isSigner: false, isWritable: false},
+      {pubkey: programKey, isSigner: false, isWritable: false},
+      {pubkey: new PublicKey("FfWQcrz3pD3NGzinVdv7iNbfE9SmR58hso7EtfzKcX7"), isSigner: false, isWritable: true},
+      {pubkey: new PublicKey("FdDjT4jAV5x1YwriNoUWxLYW538A37FHVQAVC572e3Dr"), isSigner: false, isWritable: true},
+      {pubkey: new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"), isSigner: false, isWritable: false},
     ];
     const commandDataLayout = BufferLayout.struct([
       BufferLayout.u8('instruction'),
@@ -1570,7 +1583,8 @@ async createWithDraw(
       console.log("###### sending data : " + encodeLength)
     }
 
-    
+    console.log("program id = " + programId + " key = " + programKey);
+
 
     return new TransactionInstruction({
       keys,

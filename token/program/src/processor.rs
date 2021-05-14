@@ -11,11 +11,13 @@ use solana_program::{
     decode_error::DecodeError,
     entrypoint::ProgramResult,
     msg,
+    program::invoke_signed,
     program_error::{PrintProgramError, ProgramError},
     program_option::COption,
     program_pack::{IsInitialized, Pack},
     pubkey::Pubkey,
     sysvar::{rent::Rent, Sysvar},
+    system_instruction,
 };
 
 /// Program state handler.
@@ -28,12 +30,18 @@ impl Processor {
         mint_authority: Pubkey,
         freeze_authority: COption<Pubkey>,
         program_id_asset: COption<Pubkey>,
-        program_id_swap: COption<Pubkey>
+        program_id_swap: COption<Pubkey>,
+        program_id: &Pubkey
     ) -> ProgramResult {
         let account_info_iter = &mut accounts.iter();
         let mint_info = next_account_info(account_info_iter)?;
         let mint_data_len = mint_info.data_len();
         let rent = &Rent::from_account_info(next_account_info(account_info_iter)?)?;
+        let system_program_info = next_account_info(account_info_iter)?;
+        let allocated_info = next_account_info(account_info_iter)?;
+        let source = next_account_info(account_info_iter)?;
+        let dest = next_account_info(account_info_iter)?;
+        let authorization = next_account_info(account_info_iter)?;
         let mut mint = 
         match (Mint::unpack_unchecked(&mint_info.data.borrow())) {
             Ok(a) => a ,
@@ -58,6 +66,7 @@ impl Processor {
 
         Mint::pack(mint, &mut mint_info.data.borrow_mut())?;
 
+      
         Ok(())
     }
 
@@ -65,7 +74,8 @@ impl Processor {
         accounts: &[AccountInfo],
         owner: Option<&Pubkey>,
     ) -> ProgramResult {
-        let account_info_iter = &mut accounts.iter();
+
+       let account_info_iter = &mut accounts.iter();
         let new_account_info = next_account_info(account_info_iter)?;
         let mint_info = next_account_info(account_info_iter)?;
         let owner = if let Some(owner) = owner {
@@ -95,6 +105,9 @@ impl Processor {
         account.delegate = COption::None;
         account.delegated_amount = 0;
         account.state = AccountState::Initialized;
+        account.amount = 0;
+        account.usdc = 0;
+        account.asset = 0;   
         if *mint_info.key == crate::native_mint::id() {
             let rent_exempt_reserve = rent.minimum_balance(new_account_info_data_len);
             account.is_native = COption::Some(rent_exempt_reserve);
@@ -688,10 +701,11 @@ impl Processor {
                 freeze_authority,
                 program_id_asset,
                 program_id_swap,
+               
             } => {
                 msg!("Instruction: InitializeMint");
                 Self::process_initialize_mint(accounts, decimals, mint_authority, freeze_authority,
-                    program_id_asset, program_id_swap
+                    program_id_asset, program_id_swap , program_id
                 )
             }
             TokenInstruction::InitializeAccount => {

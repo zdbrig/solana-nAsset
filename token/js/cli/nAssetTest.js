@@ -32,8 +32,9 @@ async function main() {
   await loadTokenProgram();
   console.log('Run test: createMint');
   await createMint();
-  // console.log("create account");
-  // await createAccount();
+   console.log("create account");
+  
+   await createAccount();
   // console.log("create association");
   // await createAssociatedAccount();
   console.log("Run test: Depsit");

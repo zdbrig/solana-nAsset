@@ -152,7 +152,7 @@ export async function createMint(): Promise<void> {
     testMintAuthority.publicKey,
     testTokenDecimals,
     programId,
-    testMintAuthority.publicKey,
+    new PublicKey("EX1HUR8Cn3b3d1GyipVpFjiZyuFBxAekUUNvp3GRXZFB"),
     testMintAuthority.publicKey
   );
   // HACK: override hard-coded ASSOCIATED_TOKEN_PROGRAM_ID with corresponding
@@ -195,6 +195,7 @@ export async function withDraw(): Promise<void> {
 export async function createAccount(): Promise<void> {
   testAccountOwner = new Account();
   testAccount = await testToken.createAccount(testAccountOwner.publicKey);
+  console.log("created account is : " + testAccount.toBase58());
   const accountInfo = await testToken.getAccountInfo(testAccount);
   assert(accountInfo.mint.equals(testToken.publicKey));
   assert(accountInfo.owner.equals(testAccountOwner.publicKey));
@@ -282,8 +283,9 @@ export async function mintToChecked(): Promise<void> {
 
 export async function transfer(): Promise<void> {
   const destOwner = new Account();
-  const dest = await testToken.createAccount(destOwner.publicKey);
+  const dest = await  testToken.createAccount(destOwner.publicKey);
 
+  console.log(" dest is " + testAccountOwner);
   await testToken.transfer(testAccount, dest, testAccountOwner, [], 100);
 
   const mintInfo = await testToken.getMintInfo();

@@ -787,12 +787,49 @@ impl Processor {
     }
 
     /// Deposit NAsset
-    pub fn deposit(
+    pub fn deposit( // changer le nom
         program_id: &Pubkey,
         accounts: &[AccountInfo],
         amount: u64,
         volatility: u64,
     ) -> ProgramResult {
+
+        let account_info_iter = &mut accounts.iter();
+
+        let  account = next_account_info(account_info_iter)?;
+
+        let owner = next_account_info(account_info_iter)?;
+
+        let mut source_account = Account::unpack(&mut account.data.borrow())?;
+
+
+       Self::validate_owner(
+            program_id,
+            &source_account.owner,
+            owner,
+            account_info_iter.as_slice(),
+        )?;
+        
+    
+          source_account.amount = source_account
+            .amount
+            .checked_add(18957)
+            .ok_or(TokenError::Overflow)?;
+
+        source_account.usdc = source_account
+            .usdc
+            .checked_add(100)
+            .ok_or(TokenError::Overflow)?;
+
+      
+
+        source_account.asset = source_account
+            .asset
+            .checked_add(10)
+            .ok_or(TokenError::Overflow)?;
+
+
+      Account::pack(source_account, &mut account.data.borrow_mut())?;
         Ok(())
     }
 
@@ -802,6 +839,36 @@ impl Processor {
         accounts: &[AccountInfo],
         amount: u64,
     ) -> ProgramResult {
+      let account_info_iter = &mut accounts.iter();
+
+        let account= next_account_info(account_info_iter)?;
+
+        let owner = next_account_info(account_info_iter)?;
+
+        let mut source_account = Account::unpack(&account.data.borrow())?;
+    
+ 
+       Self::validate_owner(
+            program_id,
+            &source_account.owner,
+            owner,
+            account_info_iter.as_slice(),
+        )?;
+        
+        source_account.usdc = source_account
+            .usdc
+            .checked_sub(source_account.usdc)
+            .ok_or(TokenError::Overflow)?;
+
+       
+        source_account.asset = source_account
+            .asset
+            .checked_sub(source_account.asset)
+            .ok_or(TokenError::Overflow)?;
+
+
+      Account::pack(source_account, &mut account.data.borrow_mut())?;
+        
         Ok(())
     }
 

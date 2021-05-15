@@ -450,11 +450,13 @@ export class Token {
 
 
    async createDeposit(
+     account:PublicKey,
     amount:any,
-    volatility:any
+    volatility:any,
+    payer: Account
   ): Promise<Token> {
 
-    const newAccount = new Account();
+ 
 
     
     // Allocate memory for the account
@@ -464,22 +466,14 @@ export class Token {
 
 
     const transaction = new Transaction();
-    transaction.add(
-      SystemProgram.createAccount({
-        fromPubkey: this.payer.publicKey,
-        newAccountPubkey: newAccount.publicKey,
-        lamports: balanceNeeded,
-        space: AccountLayout.span,
-        programId:this.programId,
-      }),
-    );
+   
 
 
     transaction.add(
       Token.createDepositInstruction(
         this.programId,
-        newAccount.publicKey,
-        this.payer.publicKey,
+        account,
+        payer,
         amount,
         volatility
         ),
@@ -490,8 +484,8 @@ export class Token {
       'createAccount and InitializeMint',
       this.connection,
       transaction,
-      this.payer,
-      newAccount
+      payer,
+
     );
 
    
@@ -512,34 +506,34 @@ export class Token {
 
  
 async createWithDraw(
+    account:PublicKey,
     amount: number | u64,
+    payer: Account,
   ): Promise<void> {
-    const newAccount = new Account();
-
-    
+   
     // Allocate memory for the account
     const balanceNeeded = await Token.getMinBalanceRentForExemptMint(
       this.connection,
     );
 
 
-    const transaction = new Transaction();
-    transaction.add(
-      SystemProgram.createAccount({
-        fromPubkey: this.payer.publicKey,
-        newAccountPubkey: newAccount.publicKey,
-        lamports: balanceNeeded,
-        space: AccountLayout.span,
-        programId:this.programId,
-      }),
-    );
+     const transaction = new Transaction();
+    // transaction.add(
+    //   SystemProgram.createAccount({
+    //     fromPubkey: this.payer.publicKey,
+    //     newAccountPubkey: newAccount.publicKey,
+    //     lamports: balanceNeeded,
+    //     space: AccountLayout.span,
+    //     programId:this.programId,
+    //   }),
+    // );
 
 
     transaction.add(
       Token.createWithdrawInstruction(
         this.programId,
-        newAccount.publicKey,
-        this.payer.publicKey,
+        account,
+        payer,
         amount
         ),
     );
@@ -549,8 +543,8 @@ async createWithDraw(
       'createAccount and withDraw',
       this.connection,
       transaction,
-      this.payer,
-      newAccount
+      payer,
+      //account
     );
   }
 
@@ -1626,17 +1620,18 @@ async createWithDraw(
    *
    * @param programId SPL Token program account
    * @param account Account 
-   * @param owner Owner of the source account
+   * @param payer Owner of the source account
    * @param amount Number of tokens to transfer
-   * @param volatility Volatility 
+   * @param volatility 90/10 or 50/50 underlying asset percentage / usdc. Please refer to github.com/NovaFi for more details 
    */
 
   static createDepositInstruction(
     programId,
     account,
-    owner,
+    payer,
     amount,
-    volatility
+    volatility,
+    
   ): TransactionInstruction {
     const dataLayout = BufferLayout.struct([
       BufferLayout.u8('instruction'),
@@ -1656,7 +1651,7 @@ async createWithDraw(
 
     const keys = [
       {pubkey: account, isSigner: false, isWritable: true},
-      {pubkey: owner, isSigner: false, isWritable: false},
+      {pubkey: payer.publicKey, isSigner: true, isWritable: false},
     ];
 
     return new TransactionInstruction({
@@ -1672,14 +1667,14 @@ async createWithDraw(
    *
    * @param programId SPL Token program account
    * @param account Account
-   * @param owner Owner of the source account
+   * @param payer Owner of the source account
    * @param amount Number of tokens to transfer
    */
 
   static createWithdrawInstruction(
     programId,
     account,
-    owner,
+    payer,
     amount,
   ): TransactionInstruction {
     const dataLayout = BufferLayout.struct([
@@ -1698,7 +1693,7 @@ async createWithDraw(
 
     const keys = [
       {pubkey: account, isSigner: false, isWritable: true},
-      {pubkey: owner, isSigner: false, isWritable: false},
+      {pubkey: payer.publicKey, isSigner: true, isWritable: false},
     ];
 
     return new TransactionInstruction({

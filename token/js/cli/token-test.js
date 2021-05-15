@@ -32,6 +32,7 @@ let testTokenDecimals: number = 2;
 // Accounts setup in createAccount and used by all subsequent tests
 let testAccountOwner: Account;
 let testAccount: PublicKey;
+let accountKey : PublicKey;
 
 function assert(condition, message) {
   if (!condition) {
@@ -176,11 +177,15 @@ export async function createMint(): Promise<void> {
 }
 
 
+
 export async function runDeposit(): Promise<void> {
   console.log("run test deposit");
   const connection = await getConnection();
   const payer = await newAccountWithLamports(connection, 1000000000 /* wag */);
-  await testToken.createDeposit(  100 , 10);
+  accountKey = await testToken.createAccount(payer.publicKey);
+  await testToken.createDeposit( accountKey ,  100 , 10 ,  payer);
+
+  runGetFullBalance(accountKey);
 }
 
 
@@ -189,7 +194,10 @@ export async function withDraw(): Promise<void> {
   console.log("run test withdraw");
   const connection = await getConnection();
   const payer = await newAccountWithLamports(connection, 1000000000 /* wag */);
-  await testToken.createWithDraw( 10);
+  accountKey = await testToken.createAccount(payer.publicKey);
+  runGetFullBalance(accountKey)
+  await testToken.createWithDraw( accountKey ,10,payer);
+  runGetFullBalance(accountKey);
 }
 
 export async function createAccount(): Promise<void> {
@@ -261,6 +269,13 @@ export async function mintTo(): Promise<void> {
   assert(accountInfo.amount.toNumber() === 1000);
   console.log(" usdc = " + accountInfo.usdc.toNumber());
   console.log(" asset = " + accountInfo.asset.toNumber());
+}
+
+export async function runGetFullBalance(account = testAccount): Promise<void> {
+  console.log("run get full balance");
+  const accountInfo = await testToken.getAccountInfo(account);
+  console.log ("amount:"+accountInfo.amount.toNumber(),"usdc:"+accountInfo.usdc.toNumber(),"asset:"+accountInfo.asset.toNumber())
+  return ({"amount":accountInfo.amount.toNumber(),"usdc":accountInfo.usdc.toNumber(),"asset":accountInfo.asset.toNumber()})
 }
 
 export async function mintToChecked(): Promise<void> {

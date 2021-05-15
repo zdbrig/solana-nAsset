@@ -24,7 +24,8 @@ import {
   closeAccount,
   nativeToken,
   runDeposit,
-  withDraw
+  withDraw,
+  runGetFullBalance
 } from './token-test';
 
 async function main() {
@@ -40,18 +41,21 @@ async function main() {
    
   console.log('Run mintTo');
   await mintTo();
-
+console.log ("Run get full balance 1")
+await runGetFullBalance();
    
   // console.log("create association");
   // await createAssociatedAccount();
   console.log("Run test: Depsit");
   await runDeposit();
 
+
   console.log('Run test: transfer');
   await transfer();
 
   console.log('Run test: withDraw');
   await withDraw();
+
 }
 
 main()

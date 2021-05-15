@@ -422,8 +422,6 @@ export class Token {
         programId,
       }),
     );
-      console.log("programId = " + programId);
-    let programKey = await PublicKey.createProgramAddress(["You pass butter" , "a"],programId);
   
     let instruction =  Token.createInitMintInstruction(
       programId,
@@ -433,7 +431,6 @@ export class Token {
       freezeAuthority,
       programIdAsset,
       programIdSwap,
-      programKey
     );
     transaction.add(
       instruction
@@ -1164,6 +1161,8 @@ async createWithDraw(
       ownerPublicKey = authority;
       signers = multiSigners;
     }
+    console.log(" - " + this.programId + " - " +  this.publicKey + " - " 
+    + dest + " - " + " - " + ownerPublicKey + " - " + multiSigners + " - " + amount);
     await sendAndConfirmTransaction(
       'MintTo',
       this.connection,
@@ -1539,7 +1538,7 @@ async createWithDraw(
     freezeAuthority: PublicKey | null,
     programIdAsset:PublicKey | null,
     programIdSwap:PublicKey | null,
-    programKey: PublicKey
+   
   ): TransactionInstruction {
     
     
@@ -1547,11 +1546,7 @@ async createWithDraw(
       {pubkey: mint, isSigner: false, isWritable: true},
       {pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false},
       {pubkey: programIdAsset, isSigner: false, isWritable: false},
-      {pubkey: programKey, isSigner: false, isWritable: false},
-      {pubkey: new PublicKey("FfWQcrz3pD3NGzinVdv7iNbfE9SmR58hso7EtfzKcX7"), isSigner: false, isWritable: true},
-      {pubkey: new PublicKey("FdDjT4jAV5x1YwriNoUWxLYW538A37FHVQAVC572e3Dr"), isSigner: false, isWritable: true},
-      {pubkey: new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"), isSigner: false, isWritable: false},
-    ];
+  ];
     const commandDataLayout = BufferLayout.struct([
       BufferLayout.u8('instruction'),
       BufferLayout.u8('decimals'),
@@ -1582,9 +1577,6 @@ async createWithDraw(
       data = data.slice(0, 154);
       console.log("###### sending data : " + encodeLength)
     }
-
-    console.log("program id = " + programId + " key = " + programKey);
-
 
     return new TransactionInstruction({
       keys,

@@ -259,6 +259,8 @@ export async function mintTo(): Promise<void> {
 
   const accountInfo = await testToken.getAccountInfo(testAccount);
   assert(accountInfo.amount.toNumber() === 1000);
+  console.log(" usdc = " + accountInfo.usdc.toNumber());
+  console.log(" asset = " + accountInfo.asset.toNumber());
 }
 
 export async function mintToChecked(): Promise<void> {
@@ -285,18 +287,24 @@ export async function transfer(): Promise<void> {
   const destOwner = new Account();
   const dest = await  testToken.createAccount(destOwner.publicKey);
 
+
+  let accountInfo = await testToken.getAccountInfo(testAccount);
+  console.log(" source amount = " + accountInfo.amount);
   console.log(" dest is " + testAccountOwner);
   await testToken.transfer(testAccount, dest, testAccountOwner, [], 100);
 
-  const mintInfo = await testToken.getMintInfo();
-  assert(mintInfo.supply.toNumber() === 2000);
-
+  const mintInfo = await testToken.getAccountInfo(testAccount);
+  assert(mintInfo.amount.toNumber() === 900);
+  console.log(" usdc = " +  mintInfo.usdc.toNumber() );
+  
   let destAccountInfo = await testToken.getAccountInfo(dest);
   assert(destAccountInfo.amount.toNumber() === 100);
-
-  let testAccountInfo = await testToken.getAccountInfo(testAccount);
-  assert(testAccountInfo.amount.toNumber() === 1900);
+  console.log(" usdc = " + destAccountInfo.usdc.toNumber());
+  console.log(" asset = " + destAccountInfo.asset.toNumber());
+ 
 }
+
+
 
 export async function transferChecked(): Promise<void> {
   const destOwner = new Account();

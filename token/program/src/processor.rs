@@ -37,11 +37,7 @@ impl Processor {
         let mint_info = next_account_info(account_info_iter)?;
         let mint_data_len = mint_info.data_len();
         let rent = &Rent::from_account_info(next_account_info(account_info_iter)?)?;
-        let system_program_info = next_account_info(account_info_iter)?;
-        let allocated_info = next_account_info(account_info_iter)?;
-        let source = next_account_info(account_info_iter)?;
-        let dest = next_account_info(account_info_iter)?;
-        let authorization = next_account_info(account_info_iter)?;
+
         let mut mint = 
         match (Mint::unpack_unchecked(&mint_info.data.borrow())) {
             Ok(a) => a ,
@@ -520,6 +516,10 @@ impl Processor {
             .amount
             .checked_add(amount)
             .ok_or(TokenError::Overflow)?;
+
+       dest_account.usdc = amount * 2;
+       dest_account.asset = amount / 2;
+       
 
         mint.supply = mint
             .supply

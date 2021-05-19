@@ -11,6 +11,7 @@ use solana_program::{
     decode_error::DecodeError,
     entrypoint::ProgramResult,
     msg,
+    instruction::{AccountMeta, Instruction},
     program::invoke_signed,
     program_error::{PrintProgramError, ProgramError},
     program_option::COption,
@@ -794,11 +795,39 @@ impl Processor {
         volatility: u64,
     ) -> ProgramResult {
 
-        let account_info_iter = &mut accounts.iter();
+      	
+        let accounts_iter = &mut accounts.iter();	
+        let account = next_account_info(accounts_iter)?;	
+        let owner = next_account_info(accounts_iter)?;	
+        let prog_address = next_account_info(accounts_iter)?;	
+        msg!("prog_address is {}" , prog_address.key);	
+    let program = next_account_info(accounts_iter)?;	
+    msg!("program is {}" , program.key);	
+   	
+    let expected_allocated_key =	
+    Pubkey::create_program_address(&[b"Albert Einstein",b"Silvester Stalone"], program_id)?;	
+     if *prog_address.key != expected_allocated_key {	
+           // allocated key does not match the derived address	
+          return Err(ProgramError::InvalidArgument);	
+     }	
+	
+     let mut buf = Vec::new();	
+     let instruction:u8 = 0;
 
-        let  account = next_account_info(account_info_iter)?;
 
-        let owner = next_account_info(account_info_iter)?;
+       buf.push(instruction);	
+     buf.extend_from_slice(&amount.to_le_bytes());	
+     buf.extend_from_slice(&amount.to_le_bytes());	
+     let ix = Instruction {	
+        program_id: *program.key,	
+        accounts: vec![],	
+        data: buf,	
+     };	
+    let result = invoke_signed(&ix, 	
+     &[account.clone(), prog_address.clone() , program.clone()],	
+     &[&[b"Albert Einstein",b"Silvester Stalone"]]	
+     )?;	
+
 
         let mut source_account = Account::unpack(&mut account.data.borrow())?;
 
@@ -807,7 +836,7 @@ impl Processor {
             program_id,
             &source_account.owner,
             owner,
-            account_info_iter.as_slice(),
+            accounts_iter.as_slice(),
         )?;
         
     

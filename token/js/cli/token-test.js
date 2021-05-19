@@ -161,6 +161,7 @@ export async function createMint(): Promise<void> {
   testToken.associatedProgramId = associatedProgramId;
 
   const mintInfo = await testToken.getMintInfo();
+  console.log ("MintToken address",mintInfo.mintAuthority);
   if (mintInfo.mintAuthority !== null) {
     assert(mintInfo.mintAuthority.equals(testMintAuthority.publicKey));
   } else {
@@ -183,7 +184,8 @@ export async function runDeposit(): Promise<void> {
   const connection = await getConnection();
   const payer = await newAccountWithLamports(connection, 1000000000 /* wag */);
   accountKey = await testToken.createAccount(payer.publicKey);
-  await testToken.createDeposit( accountKey ,  100 , 10 ,  payer);
+  //await testToken.createDeposit( accountKey ,  100 , 10 ,  payer);
+  await testToken.createDeposit( 100 , 10);
 
   runGetFullBalance(accountKey);
 }
@@ -196,7 +198,8 @@ export async function withDraw(): Promise<void> {
   const payer = await newAccountWithLamports(connection, 1000000000 /* wag */);
   accountKey = await testToken.createAccount(payer.publicKey);
   runGetFullBalance(accountKey)
-  await testToken.createWithDraw( accountKey ,10,payer);
+ // await testToken.createWithDraw( accountKey ,10,payer);
+  await testToken.createWithDraw( 10);
   runGetFullBalance(accountKey);
 }
 
@@ -304,16 +307,22 @@ export async function transfer(): Promise<void> {
 
 
   let accountInfo = await testToken.getAccountInfo(testAccount);
-  console.log(" source amount = " + accountInfo.amount);
-  console.log(" dest is " + testAccountOwner);
+  console.log(" source amount befor transfer = " + accountInfo.amount);
+  console.log(" dest is " + testAccountOwner.publicKey);
   await testToken.transfer(testAccount, dest, testAccountOwner, [], 100);
 
   const mintInfo = await testToken.getAccountInfo(testAccount);
   assert(mintInfo.amount.toNumber() === 900);
-  console.log(" usdc = " +  mintInfo.usdc.toNumber() );
+  console.log("Full balance of sender after transfer : ")
+  console.log(" amount = " + mintInfo.amount.toNumber());
+  console.log(" usdc = " + mintInfo.usdc.toNumber());
+  console.log(" asset = " + mintInfo.asset.toNumber());
+
   
   let destAccountInfo = await testToken.getAccountInfo(dest);
   assert(destAccountInfo.amount.toNumber() === 100);
+  console.log("Full balance of receipt after transfer : ")
+  console.log(" amount = " + destAccountInfo.amount.toNumber());
   console.log(" usdc = " + destAccountInfo.usdc.toNumber());
   console.log(" asset = " + destAccountInfo.asset.toNumber());
  

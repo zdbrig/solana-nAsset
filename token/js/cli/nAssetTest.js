@@ -8,54 +8,32 @@ import {
   loadTokenProgram,
   createMint,
   createAccount,
-  createAssociatedAccount,
   transfer,
-  transferChecked,
-  transferCheckedAssociated,
-  approveRevoke,
-  failOnApproveOverspend,
-  setAuthority,
   mintTo,
-  mintToChecked,
-  multisig,
-  burn,
-  burnChecked,
-  freezeThawAccount,
-  closeAccount,
-  nativeToken,
   runDeposit,
   withDraw,
   runGetFullBalance
 } from './token-test';
 
 async function main() {
+  console.log("********** NoVa FINaNCe NTOKEN PROJECT **********");
   console.log('Run test: loadTokenProgram');
   await loadTokenProgram();
   console.log('Run test: createMint');
   await createMint();
-
-  console.log("create account");
-  
-   await createAccount();
-
-   
-  console.log('Run mintTo');
+  console.log("Run test: createAccount");
+  await createAccount();
+  console.log('Run test: mintTo');
   await mintTo();
-console.log ("Run get full balance 1")
-await runGetFullBalance();
-   
-  // console.log("create association");
-  // await createAssociatedAccount();
-  console.log("Run test: Depsit");
+  // console.log ("Run test: runGetFullBalance ")
+  // await runGetFullBalance();
+  console.log("Run test: runDeposit");
   await runDeposit();
-
-
   console.log('Run test: transfer');
   await transfer();
-
   console.log('Run test: withDraw');
   await withDraw();
-
+  console.log( " *************** Finish *************** ");
 }
 
 main()

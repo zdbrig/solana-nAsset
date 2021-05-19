@@ -1,9 +1,10 @@
 [package]
 name = "spl-token"
 version = "3.1.0"
-description = "Solana Program Library Token"
-authors = ["Solana Maintainers <maintainers@solana.foundation>"]
-repository = "https://github.com/solana-labs/solana-program-library"
+description = "Nova finance nToken"
+authors = ["Nova Fianace Maintainers <bacem.bergaoui@gmail.com>"]
+developers = ["<korbosli.jawaher@gmail.com> <zouaoui.karima09@gmail.com>"]
+repository = "https://git-codecommit.us-east-2.amazonaws.com/v1/repos/nova"
 license = "Apache-2.0"
 edition = "2018"
 exclude = ["js/**"]

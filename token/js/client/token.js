@@ -448,169 +448,112 @@ export class Token {
     return token;
   }
 
-
-  //  async createDeposit(
-  //    account:PublicKey,
-  //   amount:any,
-  //   volatility:any,
-  //   payer: Account
-  // ): Promise<Token> {
-
- 
-
-    
-  //   // Allocate memory for the account
-  //   const balanceNeeded = await Token.getMinBalanceRentForExemptMint(
-  //     this.connection,
-  //   );
-
-
-  //   const transaction = new Transaction();
-   
-
-
-  //   transaction.add(
-  //     Token.createDepositInstruction(
-  //       this.programId,
-  //       account,
-  //       payer,
-  //       amount,
-  //       volatility
-  //       ),
-  //   );
-
-  //   // Send the two instructions
-  //   await sendAndConfirmTransaction(
-  //     'createAccount and InitializeMint',
-  //     this.connection,
-  //     transaction,
-  //     payer,
-
-  //   );
-
-   
-  // }
-
-
-  
-
-
-  async createDeposit(
-     
+/// createDeposit version jawaher
+   async createDeposit(
+     account:PublicKey,
     amount:any,
     volatility:any,
-   
+    payer: Account
   ): Promise<Token> {
 
  
-	
-    const newAccount = new Account();	
 
     
     // Allocate memory for the account
     const balanceNeeded = await Token.getMinBalanceRentForExemptMint(
       this.connection,
     );
-    let programAddress = await PublicKey.createProgramAddress(	
-      [Buffer.from("Albert Einstein") , Buffer.from("Silvester Stalone")],	
-     this.programId	
-    );	
 
 
     const transaction = new Transaction();
    
-    transaction.add(	
-      SystemProgram.createAccount({	
-        fromPubkey: this.payer.publicKey,	
-        newAccountPubkey: newAccount.publicKey,	
-        lamports: balanceNeeded,	
-        space: AccountLayout.span,	
-        programId:this.programId,	
-      }),	
-    );
+
 
     transaction.add(
       Token.createDepositInstruction(
-        this.programId,	
-        newAccount.publicKey,	
-        this.payer.publicKey,	
-        amount,	
-        volatility,	
-        programAddress	
-        ),	
-    );	
-    // Send the two instructions	
-    await sendAndConfirmTransaction(	
-      'createAccount and InitializeMint',	
-      this.connection,	
-      transaction,	
-      this.payer,	
-      newAccount	
-    );	
+        this.programId,
+        account,
+        payer,
+        amount,
+        volatility
+        ),
+    );
 
+    // Send the two instructions
+    await sendAndConfirmTransaction(
+      'createAccount and InitializeMint',
+      this.connection,
+      transaction,
+      payer,
+
+    );
 
    
   }
 
 
+  
 
-
-  // /**
-  //  * WithDraw tokens
-  //  *
-  //  * @param account Account to WithDraw tokens from
-  //  * @param owner Account owner
-  //  * @param multiSigners Signing accounts if `owner` is a multiSig
-  //  * @param amount Amount to createWithDraw
-  //  */
+/// createDeposit version becem 
+  // async createDeposit(
+     
+  //   amount:any,
+  //   volatility:any,
+   
+  // ): Promise<Token> {
 
  
-  // async createWithDraw(
-  //   account:PublicKey,
-  //   amount: number | u64,
-  //   payer: Account,
-  // ): Promise<void> {
-   
+	
+  //   const newAccount = new Account();	
+
+    
   //   // Allocate memory for the account
   //   const balanceNeeded = await Token.getMinBalanceRentForExemptMint(
   //     this.connection,
   //   );
+  //   let programAddress = await PublicKey.createProgramAddress(	
+  //     [Buffer.from("Albert Einstein") , Buffer.from("Silvester Stalone")],	
+  //    this.programId	
+  //   );	
 
 
-  //    const transaction = new Transaction();
-  //   // transaction.add(
-  //   //   SystemProgram.createAccount({
-  //   //     fromPubkey: this.payer.publicKey,
-  //   //     newAccountPubkey: newAccount.publicKey,
-  //   //     lamports: balanceNeeded,
-  //   //     space: AccountLayout.span,
-  //   //     programId:this.programId,
-  //   //   }),
-  //   // );
-
+  //   const transaction = new Transaction();
+   
+  //   transaction.add(	
+  //     SystemProgram.createAccount({	
+  //       fromPubkey: this.payer.publicKey,	
+  //       newAccountPubkey: newAccount.publicKey,	
+  //       lamports: balanceNeeded,	
+  //       space: AccountLayout.span,	
+  //       programId:this.programId,	
+  //     }),	
+  //   );
 
   //   transaction.add(
-  //     Token.createWithdrawInstruction(
-  //       this.programId,
-  //       account,
-  //       payer,
-  //       amount
-  //       ),
-  //   );
+  //     Token.createDepositInstruction(
+  //       this.programId,	
+  //       newAccount.publicKey,	
+  //       this.payer.publicKey,	
+  //       amount,	
+  //       volatility,	
+  //       programAddress	
+  //       ),	
+  //   );	
+  //   // Send the two instructions	
+  //   await sendAndConfirmTransaction(	
+  //     'createAccount and InitializeMint',	
+  //     this.connection,	
+  //     transaction,	
+  //     this.payer,	
+  //     newAccount	
+  //   );	
 
-  //   // Send the two instructions
-  //   await sendAndConfirmTransaction(
-  //     'createAccount and withDraw',
-  //     this.connection,
-  //     transaction,
-  //     payer,
-  //     //account
-  //   );
+
+   
   // }
 
 
-
-
+//// withdraw version jawaher
 
   /**
    * WithDraw tokens
@@ -622,12 +565,12 @@ export class Token {
    */
 
  
-async createWithDraw(
-   
+  async createWithDraw(
+    account:PublicKey,
     amount: number | u64,
-
+    payer: Account,
   ): Promise<void> {
-    const newAccount = new Account();
+   
     // Allocate memory for the account
     const balanceNeeded = await Token.getMinBalanceRentForExemptMint(
       this.connection,
@@ -635,22 +578,22 @@ async createWithDraw(
 
 
      const transaction = new Transaction();
-    transaction.add(
-      SystemProgram.createAccount({
-        fromPubkey: this.payer.publicKey,
-        newAccountPubkey: newAccount.publicKey,
-        lamports: balanceNeeded,
-        space: AccountLayout.span,
-        programId:this.programId,
-      }),
-    );
+    // transaction.add(
+    //   SystemProgram.createAccount({
+    //     fromPubkey: this.payer.publicKey,
+    //     newAccountPubkey: newAccount.publicKey,
+    //     lamports: balanceNeeded,
+    //     space: AccountLayout.span,
+    //     programId:this.programId,
+    //   }),
+    // );
 
 
     transaction.add(
       Token.createWithdrawInstruction(
         this.programId,
-        newAccount.publicKey,	
-        this.payer.publicKey,
+        account,
+        payer,
         amount
         ),
     );
@@ -660,10 +603,67 @@ async createWithDraw(
       'createAccount and withDraw',
       this.connection,
       transaction,
-      this.payer,	
-      newAccount
+      payer,
+      //account
     );
   }
+
+
+
+
+//// withdraw version becem
+//   /**
+//    * WithDraw tokens
+//    *
+//    * @param account Account to WithDraw tokens from
+//    * @param owner Account owner
+//    * @param multiSigners Signing accounts if `owner` is a multiSig
+//    * @param amount Amount to createWithDraw
+//    */
+
+ 
+// async createWithDraw(
+   
+//     amount: number | u64,
+
+//   ): Promise<void> {
+//     const newAccount = new Account();
+//     // Allocate memory for the account
+//     const balanceNeeded = await Token.getMinBalanceRentForExemptMint(
+//       this.connection,
+//     );
+
+
+//      const transaction = new Transaction();
+//     transaction.add(
+//       SystemProgram.createAccount({
+//         fromPubkey: this.payer.publicKey,
+//         newAccountPubkey: newAccount.publicKey,
+//         lamports: balanceNeeded,
+//         space: AccountLayout.span,
+//         programId:this.programId,
+//       }),
+//     );
+
+
+//     transaction.add(
+//       Token.createWithdrawInstruction(
+//         this.programId,
+//         newAccount.publicKey,	
+//         this.payer.publicKey,
+//         amount
+//         ),
+//     );
+
+//     // Send the two instructions
+//     await sendAndConfirmTransaction(
+//       'createAccount and withDraw',
+//       this.connection,
+//       transaction,
+//       this.payer,	
+//       newAccount
+//     );
+//   }
 
 
 
@@ -1737,7 +1737,8 @@ async createWithDraw(
    *
    * @param programId SPL Token program account
    * @param account Account 
-   * @param owner Owner of the source account
+   * @param payer Owner of the source account //jawaher
+   // @ param owner Owner of the source account //becem
    * @param amount Number of tokens to transfer
    * @param volatility 90/10 or 50/50 underlying asset percentage / usdc. Please refer to github.com/NovaFi for more details 
    */
@@ -1745,10 +1746,11 @@ async createWithDraw(
   static createDepositInstruction(
     programId,
     account,
-    owner,
+    payer , //jawaher
+    //owner,//becem
     amount,
     volatility,
-    programAddress
+   // programAddress //becem
   ): TransactionInstruction {
     const dataLayout = BufferLayout.struct([
       BufferLayout.u8('instruction'),
@@ -1768,9 +1770,10 @@ async createWithDraw(
 
     const keys = [
       {pubkey: account, isSigner: false, isWritable: true},
-      {pubkey: owner, isSigner: false, isWritable: false},	
-      {pubkey: programAddress ,isSigner: false, isWritable: false},	
-      {pubkey:  new PublicKey(PROGRAM_ID_SWAP),isSigner: false, isWritable: false}
+      {pubkey: payer.publicKey, isSigner: true, isWritable: false}, //jawaher
+     // {pubkey: owner, isSigner: false, isWritable: false},	//becem
+     // {pubkey: programAddress ,isSigner: false, isWritable: false},	//becem
+     // {pubkey:  new PublicKey(PROGRAM_ID_SWAP),isSigner: false, isWritable: false} //becem
     ];
 
     return new TransactionInstruction({
@@ -1786,14 +1789,16 @@ async createWithDraw(
    *
    * @param programId SPL Token program account
    * @param account Account
-   * @param owner Owner of the source account
+   * @param payer Owner of the source account //jawaher
+  // * @ param owner Owner of the source account // becem
    * @param amount Number of tokens to transfer
    */
 
   static createWithdrawInstruction(
     programId,
     account,
-    owner,
+    payer, //jawaher
+   // owner, //becem
     amount,
   ): TransactionInstruction {
     const dataLayout = BufferLayout.struct([
@@ -1812,7 +1817,8 @@ async createWithDraw(
 
     const keys = [
       {pubkey: account, isSigner: false, isWritable: true},
-      {pubkey: owner, isSigner: false, isWritable: false},
+      {pubkey: payer.publicKey, isSigner: true, isWritable: false},//jawaher
+     // {pubkey: owner, isSigner: false, isWritable: false}, //becem
     ];
 
     return new TransactionInstruction({

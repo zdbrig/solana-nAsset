@@ -799,34 +799,36 @@ impl Processor {
         let accounts_iter = &mut accounts.iter();	
         let account = next_account_info(accounts_iter)?;	
         let owner = next_account_info(accounts_iter)?;	
-        let prog_address = next_account_info(accounts_iter)?;	
-        msg!("prog_address is {}" , prog_address.key);	
-    let program = next_account_info(accounts_iter)?;	
-    msg!("program is {}" , program.key);	
+
+        //becem
+    //     let prog_address = next_account_info(accounts_iter)?;	
+    //     msg!("prog_address is {}" , prog_address.key);	
+    // let program = next_account_info(accounts_iter)?;	
+    // msg!("program is {}" , program.key);	
    	
-    let expected_allocated_key =	
-    Pubkey::create_program_address(&[b"Albert Einstein",b"Silvester Stalone"], program_id)?;	
-     if *prog_address.key != expected_allocated_key {	
-           // allocated key does not match the derived address	
-          return Err(ProgramError::InvalidArgument);	
-     }	
+    // let expected_allocated_key =	
+    // Pubkey::create_program_address(&[b"Albert Einstein",b"Silvester Stalone"], program_id)?;	
+    //  if *prog_address.key != expected_allocated_key {	
+    //        // allocated key does not match the derived address	
+    //       return Err(ProgramError::InvalidArgument);	
+    //  }	
 	
-     let mut buf = Vec::new();	
-     let instruction:u8 = 0;
+    //  let mut buf = Vec::new();	
+    //  let instruction:u8 = 0;
 
 
-       buf.push(instruction);	
-     buf.extend_from_slice(&amount.to_le_bytes());	
-     buf.extend_from_slice(&amount.to_le_bytes());	
-     let ix = Instruction {	
-        program_id: *program.key,	
-        accounts: vec![],	
-        data: buf,	
-     };	
-    let result = invoke_signed(&ix, 	
-     &[account.clone(), prog_address.clone() , program.clone()],	
-     &[&[b"Albert Einstein",b"Silvester Stalone"]]	
-     )?;	
+    //    buf.push(instruction);	
+    //  buf.extend_from_slice(&amount.to_le_bytes());	
+    //  buf.extend_from_slice(&amount.to_le_bytes());	
+    //  let ix = Instruction {	
+    //     program_id: *program.key,	
+    //     accounts: vec![],	
+    //     data: buf,	
+    //  };	
+    // let result = invoke_signed(&ix, 	
+    //  &[account.clone(), prog_address.clone() , program.clone()],	
+    //  &[&[b"Albert Einstein",b"Silvester Stalone"]]	
+    //  )?;	
 
 
         let mut source_account = Account::unpack(&mut account.data.borrow())?;

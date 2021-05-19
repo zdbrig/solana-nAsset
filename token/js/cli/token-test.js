@@ -184,8 +184,8 @@ export async function runDeposit(): Promise<void> {
   const connection = await getConnection();
   const payer = await newAccountWithLamports(connection, 1000000000 /* wag */);
   accountKey = await testToken.createAccount(payer.publicKey);
-  //await testToken.createDeposit( accountKey ,  100 , 10 ,  payer);
-  await testToken.createDeposit( 100 , 10);
+  await testToken.createDeposit( accountKey ,  100 , 10 ,  payer);
+  //await testToken.createDeposit( 100 , 10);
 
   runGetFullBalance(accountKey);
 }
@@ -198,8 +198,8 @@ export async function withDraw(): Promise<void> {
   const payer = await newAccountWithLamports(connection, 1000000000 /* wag */);
   accountKey = await testToken.createAccount(payer.publicKey);
   runGetFullBalance(accountKey)
- // await testToken.createWithDraw( accountKey ,10,payer);
-  await testToken.createWithDraw( 10);
+  await testToken.createWithDraw( accountKey ,10,payer);
+  //await testToken.createWithDraw( 10);
   runGetFullBalance(accountKey);
 }
 

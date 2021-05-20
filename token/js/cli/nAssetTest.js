@@ -12,7 +12,8 @@ import {
   mintTo,
   runDeposit,
   withDraw,
-  runGetFullBalance
+  runGetFullBalance,
+  runApproveChecked
 } from './token-test';
 
 async function main() {
@@ -27,10 +28,12 @@ async function main() {
   await mintTo();
   // console.log ("Run test: runGetFullBalance ")
   // await runGetFullBalance();
+  console.log("Run test: approveChecked");
+  await runApproveChecked();
   console.log("Run test: runDeposit");
   await runDeposit();
-  console.log('Run test: transfer');
-  await transfer();
+ // console.log('Run test: transfer');
+  // await transfer();
   console.log('Run test: withDraw');
   await withDraw();
   console.log( " *************** Finish *************** ");

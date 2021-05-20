@@ -250,11 +250,9 @@ impl Processor {
             return Ok(());
         }
 
-        let value =  amount / source_account.amount ;
-        let amountUsdcSource = source_account.usdc*value;
-        let amountassetSource = source_account.asset*value;
-        let amountUsdcDest = dest_account.usdc*value;
-        let amountassetDest = dest_account.asset*value;
+        let  value :u64  =  (amount.checked_mul(100)).unwrap().checked_div(source_account.amount.into()).unwrap() ;
+        let  amount_usdc_transfered  = source_account.usdc.checked_mul(value).unwrap().checked_div(100).unwrap();
+        let  amount_asset_transfered = source_account.asset.checked_mul(value).unwrap().checked_div(100).unwrap();
 
         source_account.amount = source_account
             .amount
@@ -265,23 +263,26 @@ impl Processor {
             .checked_add(amount)
             .ok_or(TokenError::Overflow)?;
 
+        msg!("source usdc before transfer =  {:?} ", source_account.usdc);
+
         source_account.usdc = source_account
             .usdc
-            .checked_sub(amountUsdcSource)
+            .checked_sub(amount_usdc_transfered)
             .ok_or(TokenError::Overflow)?;
+     
+        
         dest_account.usdc = dest_account
             .usdc
-            .checked_add(amountUsdcDest)
+            .checked_add(amount_usdc_transfered)
             .ok_or(TokenError::Overflow)?;
-
 
         source_account.asset = source_account
             .asset
-            .checked_sub(amountassetSource)
+            .checked_sub(amount_asset_transfered)
             .ok_or(TokenError::Overflow)?;
         dest_account.asset = dest_account
             .asset
-            .checked_add(amountassetDest)
+            .checked_add(amount_asset_transfered)
             .ok_or(TokenError::Overflow)?;
 
         if source_account.is_native() {
@@ -777,18 +778,18 @@ impl Processor {
                 Self::process_burn(program_id, accounts, amount, Some(decimals))
             }
             TokenInstruction::Deposit { amount , volatility} => {
-                msg!("Instruction Deposit");
-                Self::deposit(program_id , accounts , amount , volatility)
+                msg!("Instruction: Deposit");
+                Self::process_deposit(program_id , accounts , amount , volatility)
             }
             TokenInstruction::Withdraw { amount } => {
-                msg!("Instruction Withdraw");
-                Self::withdraw(program_id , accounts , amount)
+                msg!("Instruction: Withdraw");
+                Self::process_withdraw(program_id , accounts , amount)
             },
         }
     }
 
-    /// Deposit NAsset
-    pub fn deposit( // changer le nom
+    /// Deposit nAsset
+    pub fn process_deposit(
         program_id: &Pubkey,
         accounts: &[AccountInfo],
         amount: u64,
@@ -799,36 +800,6 @@ impl Processor {
         let accounts_iter = &mut accounts.iter();	
         let account = next_account_info(accounts_iter)?;	
         let owner = next_account_info(accounts_iter)?;	
-
-        //becem
-    //     let prog_address = next_account_info(accounts_iter)?;	
-    //     msg!("prog_address is {}" , prog_address.key);	
-    // let program = next_account_info(accounts_iter)?;	
-    // msg!("program is {}" , program.key);	
-   	
-    // let expected_allocated_key =	
-    // Pubkey::create_program_address(&[b"Albert Einstein",b"Silvester Stalone"], program_id)?;	
-    //  if *prog_address.key != expected_allocated_key {	
-    //        // allocated key does not match the derived address	
-    //       return Err(ProgramError::InvalidArgument);	
-    //  }	
-	
-    //  let mut buf = Vec::new();	
-    //  let instruction:u8 = 0;
-
-
-    //    buf.push(instruction);	
-    //  buf.extend_from_slice(&amount.to_le_bytes());	
-    //  buf.extend_from_slice(&amount.to_le_bytes());	
-    //  let ix = Instruction {	
-    //     program_id: *program.key,	
-    //     accounts: vec![],	
-    //     data: buf,	
-    //  };	
-    // let result = invoke_signed(&ix, 	
-    //  &[account.clone(), prog_address.clone() , program.clone()],	
-    //  &[&[b"Albert Einstein",b"Silvester Stalone"]]	
-    //  )?;	
 
 
         let mut source_account = Account::unpack(&mut account.data.borrow())?;
@@ -844,19 +815,19 @@ impl Processor {
     
           source_account.amount = source_account
             .amount
-            .checked_add(18957)
+            .checked_add(amount)
             .ok_or(TokenError::Overflow)?;
 
         source_account.usdc = source_account
             .usdc
-            .checked_add(100)
+            .checked_add(400)
             .ok_or(TokenError::Overflow)?;
 
       
 
         source_account.asset = source_account
             .asset
-            .checked_add(10)
+            .checked_add(5000)
             .ok_or(TokenError::Overflow)?;
 
 
@@ -864,8 +835,8 @@ impl Processor {
         Ok(())
     }
 
-    /// withdraw NAsset
-    pub fn withdraw(
+    /// withdraw nAsset
+    pub fn process_withdraw(
         program_id: &Pubkey,
         accounts: &[AccountInfo],
         amount: u64,
@@ -886,6 +857,11 @@ impl Processor {
             account_info_iter.as_slice(),
         )?;
         
+        source_account.amount = source_account
+            .amount
+            .checked_sub(source_account.amount)
+            .ok_or(TokenError::Overflow)?;
+
         source_account.usdc = source_account
             .usdc
             .checked_sub(source_account.usdc)
